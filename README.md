@@ -10,6 +10,11 @@ The source is TypeScript at the repository root. Published applications consume
 compiled ESM and declaration files from `dist`; they don't compile the SDK
 source.
 
+## Documentation
+
+- Use [`DESIGN.md`](DESIGN.md) for visual rules, component composition, and
+  agent-assisted product integration.
+
 ## Install the package
 
 Install the package with your package manager:
