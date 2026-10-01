@@ -1,0 +1,24 @@
+name: Field
+status: stable
+purpose:
+  Capture one editable value with a visible label and concise help or
+  validation.
+variants: [text, password, search, date, textarea, read-only]
+states: [default, focused, disabled, invalid, valid]
+anatomy: [label, control, optional-marker, help-text, validation-message]
+accessibility:
+  web:
+    'Use label associated to input; use aria-describedby for help and errors.'
+  validation:
+    'Validate on blur, not on each keystroke. State what is wrong and what would
+    be valid.'
+tokens:
+  height: component.field.height
+  border: component.field.border
+  radius: radius.control
+platformNotes:
+  flutter: 'Use TextFormField with validator invoked on focus loss or submit.'
+  ios:
+    'Use a labeled TextField; support text-size and keyboard-appropriate content
+    type.'
+  android: 'Use labeled OutlinedTextField and error semantics.'

@@ -1,0 +1,27 @@
+name: Button
+status: stable
+purpose: Initiate an explicit action. A view has at most one primary action.
+variants: [primary, secondary, destructive, inline]
+sizes:
+  default:
+    {
+      height: component.button.height,
+      paddingInline: component.button.padding-inline,
+    }
+states: [default, hover, focus-visible, pressed, disabled, busy]
+content:
+  slots: [label, leading-icon, trailing-icon]
+accessibility:
+  web: 'Use native button; type must be explicit in forms.'
+  keyboard: [Enter, Space]
+  busy: 'Retain the accessible label, expose busy state, and retain width.'
+behavior:
+  disabled:
+    '45% opacity and no pointer interaction; do not use disabled to explain
+    validation.'
+  destructive: 'Outlined danger treatment; never a filled danger button.'
+platformNotes:
+  flutter: 'Use a semantic button and preserve the 44px minimum target.'
+  ios: 'Use Button with a custom ButtonStyle; respect Dynamic Type.'
+  android:
+    'Use a Compose Button or clickable semantics with minimum touch target.'

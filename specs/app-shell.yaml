@@ -1,0 +1,17 @@
+name: App shell
+status: stable
+purpose: Product navigation, page hierarchy, and responsive behavior.
+anatomy: [sidebar, topbar, breadcrumb, page-content, mobile-tab-bar, menu-sheet]
+breakpoints:
+  desktop: {minWidth: 901, navigation: sidebar}
+  compact: {maxWidth: 900, navigation: bottom-tabs-and-menu-sheet}
+  phone: {maxWidth: 560, grids: one-column}
+rules:
+  - 'Desktop sidebar is 248px.'
+  - 'Mobile tab bar has Overview, Verifications, Catalog, Members, and Menu.'
+  - 'The sidebar and menu sheet share one data source; do not duplicate
+    navigation.'
+  - 'Breadcrumbs express hierarchy rather than browser history.'
+accessibility:
+  navigation: 'Active destination uses aria-current=page.'
+  menu: 'Menu sheet closes with Escape, outside press, and navigation.'

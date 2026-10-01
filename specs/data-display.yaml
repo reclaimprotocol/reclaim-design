@@ -1,0 +1,22 @@
+name: Data display
+status: stable
+components:
+  - name: KpiTile
+    anatomy: [label, figure, delta]
+    rules: ['Use mono tabular figures.', 'Never abbreviate material figures.']
+  - name: ListPanel
+    anatomy: [header, count, divided-rows, inline-action]
+  - name: DataGrid
+    anatomy: [header, rows, fixed-action-column]
+    behavior:
+      'Scrollable inside its card at narrow viewports; the page never scrolls
+      sideways.'
+  - name: CodeBlock
+    anatomy: [evidence, copy-action]
+    behavior: 'Copy action is outside the code surface.'
+  - name: Pagination
+    anatomy: [range-total, previous, next]
+    behavior: 'No numbered pages; filtering is the discovery mechanism.'
+accessibility:
+  identifiers:
+    'Truncated identifiers retain full text in an accessible name/title.'

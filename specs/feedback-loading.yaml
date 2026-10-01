@@ -1,0 +1,23 @@
+name: Feedback and loading
+status: stable
+components:
+  - name: InlineFeedback
+    variants: [success, error]
+    behavior:
+      'Render at the action location; success can offer Undo and clears after
+      four seconds; errors persist until dismissed.'
+  - name: Skeleton
+    behavior:
+      'Skip for responses below 300ms. Once shown, hold 500ms to 1s and mirror
+      the eventual layout.'
+  - name: EmptyState
+    behavior:
+      'Use dashed spec border, explain what appears here, and offer one filling
+      action.'
+  - name: BlockingWarning
+    behavior:
+      'Outlined danger border, no fill, with a direct link to the resolution
+      screen.'
+motion:
+  ease: motion.ease-out
+  maxEnter: duration.enter

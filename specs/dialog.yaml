@@ -1,0 +1,22 @@
+name: Dialog
+status: stable
+purpose:
+  Complete a focused selection, confirmation, or form without losing page
+  context.
+variants: [form, confirmation, selection]
+anatomy: [title, optional-description, scrollable-body, footer, close-button]
+accessibility:
+  web:
+    'Use native dialog where suitable or an accessible modal dialog with focus
+    trap and restored trigger focus.'
+  keyboard: [Escape]
+behavior:
+  close:
+    'Escape, close button, and outside press dismiss non-destructive dialogs.'
+  confirm:
+    'Footer confirm action is right-aligned; destructive confirmations require
+    an explicit label.'
+tokens:
+  surface: color.surface.panel
+  border: color.border.strong
+  radius: radius.control

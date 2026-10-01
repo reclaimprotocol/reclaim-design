@@ -1,0 +1,27 @@
+@layer rc-utilities {
+  .rc-visually-hidden {
+    block-size: 1px;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    inline-size: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+  }
+  .rc-tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+  .rc-flow > * + * {
+    margin-block-start: var(--rc-flow-space, var(--rc-space-4));
+  }
+  .rc-surface-panel {
+    background: var(--rc-color-surface-panel);
+  }
+  .rc-text-danger {
+    color: var(--rc-color-status-danger);
+  }
+  .rc-text-success {
+    color: var(--rc-color-status-success);
+  }
+}

@@ -1,0 +1,28 @@
+/*
+ * Oat is intentionally kept as readable source instead of a generated bundle.
+ * Keep this order in sync with the upstream Makefile documented in UPSTREAM.md.
+ */
+@import url("./css/00-base.css");
+@import url("./css/01-theme.css");
+@import url("./css/animations.css");
+@import url("./css/avatar.css");
+@import url("./css/button.css");
+@import url("./css/form.css");
+@import url("./css/table.css");
+@import url("./css/progress.css");
+@import url("./css/spinner.css");
+@import url("./css/grid.css");
+@import url("./css/card.css");
+@import url("./css/alert.css");
+@import url("./css/badge.css");
+@import url("./css/accordion.css");
+@import url("./css/tabs.css");
+@import url("./css/dialog.css");
+@import url("./css/dropdown.css");
+@import url("./css/toast.css");
+@import url("./css/sidebar.css");
+@import url("./css/taginput.css");
+@import url("./css/skeleton.css");
+@import url("./css/tooltip.css");
+@import url("./css/upload.css");
+@import url("./css/utilities.css");

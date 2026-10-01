@@ -1,0 +1,22 @@
+{
+  "$description": "Semantic and component token contract. Theme files provide values for every themeable leaf.",
+  "component": {
+    "button": {
+      "height": {"$type": "dimension", "$value": "30px"},
+      "padding-inline": {"$type": "dimension", "$value": "{space.150}"},
+      "primary": {
+        "background": {"$type": "color", "$value": "{color.action.primary}"},
+        "foreground": {"$type": "color", "$value": "{color.text.on-action}"}
+      }
+    },
+    "field": {
+      "height": {"$type": "dimension", "$value": "33px"},
+      "border": {"$type": "color", "$value": "{color.border.strong}"}
+    },
+    "card": {
+      "padding": {"$type": "dimension", "$value": "{space.300}"},
+      "background": {"$type": "color", "$value": "{color.surface.panel}"},
+      "border": {"$type": "color", "$value": "{color.border.strong}"}
+    }
+  }
+}

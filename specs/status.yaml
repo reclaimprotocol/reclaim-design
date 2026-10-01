@@ -1,0 +1,15 @@
+name: Status indicator
+status: stable
+purpose: State what is true, using a dot plus a phrase or a compact status pill.
+variants: [success, warning, danger, neutral]
+semantics:
+  success: 'Fact is verified, live, or healthy.'
+  warning: 'Waiting on a person or review.'
+  danger: 'Needs work, failed, or destructive.'
+  neutral: 'Scoped, selected, or sandboxed.'
+accessibility:
+  color: 'Never rely on colour alone; always render the phrase.'
+tokens:
+  success: color.status.success
+  warning: color.status.warning
+  danger: color.status.danger

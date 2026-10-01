@@ -1,0 +1,80 @@
+@layer rc-tokens {
+  :root,
+  [data-theme] {
+    --background: var(--rc-color-surface-canvas);
+    --foreground: var(--rc-color-text-primary);
+    --card: var(--rc-color-surface-panel);
+    --card-foreground: var(--rc-color-text-primary);
+    --primary: var(--rc-color-action-primary);
+    --primary-foreground: var(--rc-color-text-on-action);
+    --secondary: var(--rc-color-surface-panel-subtle);
+    --secondary-foreground: var(--rc-color-text-secondary);
+    --muted: var(--rc-color-surface-panel-subtle);
+    --muted-foreground: var(--rc-color-text-tertiary);
+    --faint: var(--rc-color-surface-panel-subtle);
+    --faint-foreground: var(--rc-color-text-tertiary);
+    --accent: var(--rc-color-action-subtle);
+    --danger: var(--rc-color-status-danger);
+    --danger-foreground: var(--rc-color-text-on-action);
+    --success: var(--rc-color-status-success);
+    --success-foreground: var(--rc-color-text-on-action);
+    --warning: var(--rc-color-status-warning);
+    --warning-foreground: var(--rc-color-text-primary);
+    --border: var(--rc-color-border-default);
+    --input: var(--rc-color-border-strong);
+    --ring: var(--rc-color-focus-ring);
+
+    --space-1: var(--rc-space-1);
+    --space-2: var(--rc-space-2);
+    --space-3: var(--rc-space-3);
+    --space-4: var(--rc-space-4);
+    --space-5: var(--rc-space-5);
+    --space-6: var(--rc-space-5);
+    --space-8: var(--rc-space-400);
+    --space-10: 40px;
+    --space-12: var(--rc-space-500);
+    --space-14: 56px;
+    --space-16: var(--rc-space-600);
+    --space-18: 72px;
+
+    --radius-small: var(--rc-radius-control);
+    --radius-medium: var(--rc-radius-container);
+    --radius-large: var(--rc-radius-container);
+    --radius-full: var(--rc-radius-pill);
+    --bar-height: var(--rc-progress-height);
+
+    --font-sans: var(--rc-font-family-sans);
+    --font-mono: var(--rc-font-family-mono);
+    --text-1: var(--rc-font-size-page-title);
+    --text-2: var(--rc-font-size-section-title);
+    --text-3: 18px;
+    --text-4: 16px;
+    --text-5: var(--rc-font-size-lead);
+    --text-6: var(--rc-font-size-body);
+    --text-7: var(--rc-font-size-control);
+    --text-8: var(--rc-font-size-label);
+    --text-regular: var(--rc-font-size-body);
+    --leading-normal: var(--rc-font-line-height-body);
+    --font-normal: var(--rc-font-weight-regular);
+    --font-medium: var(--rc-font-weight-medium);
+    --font-semibold: var(--rc-font-weight-semibold);
+    --font-bold: var(--rc-font-weight-bold);
+
+    /* Reclaim surfaces have no resting elevation. Interactive elevation is in effects.css. */
+    --shadow-small: none;
+    --shadow-medium: none;
+    --shadow-large: none;
+    --transition-fast: var(--rc-duration-fast) var(--rc-easing-standard);
+    --transition: var(--rc-duration-base) var(--rc-easing-standard);
+    --z-dropdown: var(--rc-z-index-popover);
+    --z-modal: var(--rc-z-index-fixed);
+  }
+
+  :root,
+  [data-theme='light'] {
+    color-scheme: light;
+  }
+  [data-theme='dark'] {
+    color-scheme: dark;
+  }
+}

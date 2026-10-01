@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+coverage/
+*.log
+.dart_tool/
+.build/
+build/
+.gradle/
+local.properties

@@ -1,0 +1,14 @@
+name: Combobox
+status: stable
+purpose: Filter and select from a potentially growing set of choices.
+states: [closed, open, filtering, empty, selected, disabled]
+anatomy: [label, text-input, trigger, listbox, option, empty-message]
+accessibility:
+  web:
+    'Follow WAI-ARIA combobox/listbox pattern with active descendant management.'
+  keyboard: [ArrowDown, ArrowUp, Enter, Escape]
+behavior:
+  filter: 'Type to narrow; click or keyboard-select to choose.'
+  dismissal:
+    'Escape and an outside press close it without changing the selection.'
+  alternative: 'Use a dialog for long, grouped, or multi-select sets.'

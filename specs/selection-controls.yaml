@@ -1,0 +1,20 @@
+name: Selection controls
+status: stable
+components:
+  - name: SegmentedControl
+    purpose: Select exactly one exclusive view or scope.
+    states: [default, selected, disabled]
+    keyboard: [ArrowLeft, ArrowRight, Home, End]
+  - name: Chip
+    purpose:
+      Show a tag or compact filter; dashed treatment represents add/create.
+    states: [default, selected, disabled]
+  - name: ChoiceRow
+    purpose:
+      Select one or many descriptive options with the entire row as target.
+    variants: [single, multiple]
+    semantics: 'Native radio/checkbox whenever possible.'
+accessibility:
+  selected: 'Expose selected/checked state programmatically.'
+  target:
+    'Reach at least 44px touch target even when visual control is smaller.'

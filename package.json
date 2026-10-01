@@ -1,0 +1,138 @@
+{
+  "name": "@reclaimprotocol/design",
+  "version": "0.1.0",
+  "description": "Reclaim Protocol's framework-neutral web design system with optional React adapters and interactive charts.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/**/*.css",
+    "./dist/elements/index.js",
+    "./dist/oat/js/index.js"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./charts": {
+      "types": "./dist/charts/index.d.ts",
+      "import": "./dist/charts/index.js"
+    },
+    "./behaviors": {
+      "types": "./dist/behaviors/index.d.ts",
+      "import": "./dist/behaviors/index.js"
+    },
+    "./behaviors/core": {
+      "types": "./dist/behaviors/core.d.ts",
+      "import": "./dist/behaviors/core.js"
+    },
+    "./elements": {
+      "types": "./dist/elements/index.d.ts",
+      "import": "./dist/elements/index.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "import": "./dist/icons/index.js"
+    },
+    "./tokens": {
+      "types": "./dist/tokens/types/tokens.d.ts",
+      "import": "./dist/tokens/types/tokens.js"
+    },
+    "./tokens.css": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/tokens/css/tokens.css"
+    },
+    "./css": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/css/index.css"
+    },
+    "./css/base": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/css/base.css"
+    },
+    "./css/components": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/css/components.css"
+    },
+    "./css/effects": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/css/effects.css"
+    },
+    "./css/utilities": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/css/utilities.css"
+    },
+    "./oat": "./dist/oat/js/index.js",
+    "./oat.css": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/oat/index.css"
+    },
+    "./assets/*": "./dist/tokens/assets/*"
+  },
+  "files": [
+    "README.md",
+    "DESIGN.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "dist",
+    "vendor/oat/LICENSE.oat",
+    "vendor/oat/VENDOR.md"
+  ],
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run tokens:build && npm run build:sdk && npm run catalog:build",
+    "build:sdk": "node scripts/build-design-package.mjs clean && tsc -p tsconfig.json && node scripts/build-design-package.mjs copy",
+    "prepare": "npm run tokens:build && npm run build:sdk",
+    "tokens:build": "node scripts/build-tokens.mjs",
+    "tokens:check": "node scripts/check-token-drift.mjs",
+    "test": "npm run tokens:build && npm run build:sdk && node --test tests/*.test.mjs tests/sdk/*.test.mjs scripts/*.test.mjs",
+    "test:e2e": "playwright test",
+    "test:tokens": "node --test tests/tokens.test.mjs",
+    "style:check": "prettier --check . && eslint .",
+    "style:fix": "eslint . --fix && prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @reclaim/design-catalog",
+    "catalog:dev": "npm run dev -w @reclaim/design-catalog",
+    "catalog:build": "npm run build -w @reclaim/design-catalog",
+    "verify": "npm run tokens:check && npm run style:check && npm test && npm run typecheck && npm run catalog:build",
+    "verify:full": "npm run verify && npm run test:e2e"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "axe-core": "^4.13.0",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
