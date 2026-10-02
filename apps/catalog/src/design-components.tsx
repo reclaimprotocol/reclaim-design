@@ -2223,7 +2223,11 @@ export function ProfileMenu({
         >
           <span>{initials}</span>
           <strong>{name}</strong>
-          <span aria-hidden="true">⌄</span>
+          <span className="rc-profile-menu__chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </span>
         </button>
       }
     >

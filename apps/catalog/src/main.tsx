@@ -1177,15 +1177,27 @@ function Components() {
                 type="search"
                 placeholder="Session or provider"
               />
-              <Dropdown
-                label={componentFilter === 'all' ? 'All providers' : 'Degraded'}
-                value={componentFilter}
-                onChange={setComponentFilter}
-                options={[
-                  {value: 'all', label: 'All providers'},
-                  {value: 'degraded', label: 'Degraded'},
-                ]}
-              />
+              <div className="rc-field catalog-provider-filter">
+                <span className="rc-field__label">Provider</span>
+                <Dropdown
+                  label={
+                    componentFilter === 'all' ? 'All providers' : 'Degraded'
+                  }
+                  value={componentFilter}
+                  onChange={setComponentFilter}
+                  options={[
+                    {value: 'all', label: 'All providers'},
+                    {value: 'degraded', label: 'Degraded'},
+                  ]}
+                />
+                <span
+                  className="rc-field__message"
+                  data-empty="true"
+                  aria-hidden="true"
+                >
+                  {'\u00a0'}
+                </span>
+              </div>
             </FilterToolbar>
           </div>
         </div>

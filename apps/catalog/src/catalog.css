@@ -318,6 +318,18 @@
 .catalog-header-specimen .rc-filter-toolbar .rc-field {
   min-inline-size: min(220px, 100%);
 }
+.catalog-header-specimen .rc-filter-toolbar__controls {
+  align-items: flex-start;
+}
+.catalog-provider-filter .rc-dropdown,
+.catalog-provider-filter .rc-dropdown__trigger {
+  inline-size: 100%;
+}
+.catalog-header-specimen
+  .rc-filter-toolbar
+  :is(.rc-input, .rc-dropdown__trigger) {
+  block-size: var(--rc-size-touch-target-min);
+}
 .catalog-component-frame > :is(.rc-flow-shell, .rc-contributor-flow) {
   min-block-size: 560px;
 }

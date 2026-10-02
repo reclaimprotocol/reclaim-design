@@ -199,6 +199,17 @@ test('validation and dialogs expose complete interaction states', async ({
   await expect(encryption).not.toBeChecked();
 
   const profileTrigger = page.getByLabel('Open profile menu').first();
+  const profileTriggerBounds = await profileTrigger.boundingBox();
+  const profileChevronBounds = await profileTrigger
+    .locator('.rc-profile-menu__chevron')
+    .boundingBox();
+  expect(
+    Math.abs(
+      profileTriggerBounds!.y +
+        profileTriggerBounds!.height / 2 -
+        (profileChevronBounds!.y + profileChevronBounds!.height / 2),
+    ),
+  ).toBeLessThan(1);
   await profileTrigger.click();
   const profilePopover = page.locator('.rc-popover__content').filter({
     has: page.getByRole('button', {name: 'Account settings'}),
@@ -292,6 +303,39 @@ test('styled selections and Oat tabs expose complete behavior', async ({
     'aria-selected',
     'true',
   );
+});
+
+test('app bar filters share one control baseline', async ({page}) => {
+  await openPage(page, 'Components');
+  const specimen = page.locator('#section-app-bar-and-page-header');
+  const search = specimen.getByPlaceholder('Session or provider');
+  const providers = specimen.getByRole('button', {
+    name: 'All providers',
+    exact: true,
+  });
+  const searchBounds = await search.boundingBox();
+  const providerBounds = await providers.boundingBox();
+  const searchFieldBounds = await search.locator('xpath=..').boundingBox();
+  const providerFieldBounds = await specimen
+    .locator('.catalog-provider-filter')
+    .boundingBox();
+  const alignment = JSON.stringify({
+    searchBounds,
+    providerBounds,
+    searchFieldBounds,
+    providerFieldBounds,
+  });
+
+  if (Math.abs(searchBounds!.x - providerBounds!.x) > 1) {
+    expect(
+      Math.abs(searchBounds!.y - providerBounds!.y),
+      alignment,
+    ).toBeLessThan(1);
+  }
+  expect(
+    Math.abs(searchBounds!.height - providerBounds!.height),
+    alignment,
+  ).toBeLessThan(1);
 });
 
 test('toast, generic switcher, navigation switcher, and guided flow expose working states', async ({

@@ -395,6 +395,7 @@
     color: var(--rc-color-text-tertiary);
     font-family: var(--rc-font-family-mono);
     font-size: var(--rc-font-size-control);
+    line-height: var(--rc-font-line-height-control);
   }
   .rc-input,
   .rc-select,
@@ -404,6 +405,7 @@
     border-radius: var(--rc-radius-control);
     color: var(--rc-color-text-primary);
     inline-size: 100%;
+    margin: 0;
     min-block-size: var(--rc-size-field);
     padding: var(--rc-space-2) var(--rc-space-3);
   }
@@ -1522,8 +1524,9 @@
     z-index: calc(var(--rc-z-index-fixed) + 20);
   }
   ot-dropdown.rc-dropdown {
-    display: inline-block;
+    display: inline-flex;
     max-inline-size: 100%;
+    vertical-align: top;
   }
   .rc-dropdown__trigger {
     align-items: center;
@@ -1532,8 +1535,8 @@
     border-radius: var(--rc-radius-control);
     color: var(--rc-color-text-primary);
     display: flex;
-    font: var(--rc-font-weight-medium) var(--rc-font-size-control) / 1
-      var(--rc-font-family-mono);
+    font: var(--rc-font-weight-medium) var(--rc-font-size-control) /
+      var(--rc-font-line-height-body) var(--rc-font-family-mono);
     gap: var(--rc-space-3);
     justify-content: space-between;
     min-block-size: var(--rc-size-field);
@@ -1795,9 +1798,25 @@
     block-size: var(--rc-size-control);
     inline-size: var(--rc-size-control);
   }
-  .rc-profile-menu__trigger > span:last-child {
+  .rc-profile-menu__chevron {
+    align-items: center;
     color: var(--rc-color-text-secondary);
+    display: inline-flex;
+    flex: none;
+    justify-content: center;
     margin-inline-start: var(--rc-space-1);
+    block-size: var(--rc-size-control);
+    inline-size: 16px;
+  }
+  .rc-profile-menu__chevron svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    stroke-width: 1.5;
+    block-size: 14px;
+    inline-size: 14px;
   }
   .rc-profile-menu__trigger strong,
   .rc-profile-menu__identity strong {
