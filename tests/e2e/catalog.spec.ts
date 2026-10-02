@@ -255,9 +255,9 @@ test('semantic selections and Oat tabs work without React wrappers', async ({
 }) => {
   await openPage(page, 'Components');
 
-  const format = page.getByLabel('Export format');
-  await format.selectOption('story');
-  await expect(format).toHaveValue('story');
+  const dropdown = page.getByRole('combobox', {name: /^Dropdown/});
+  await dropdown.selectOption('option-three');
+  await expect(dropdown).toHaveValue('option-three');
 
   const automatic = page.getByRole('radio', {
     name: /Publish automatically/,
@@ -306,6 +306,15 @@ test('toast, generic switcher, navigation switcher, and guided flow expose worki
     exact: true,
   });
   await standaloneSwitcher.click();
+  const standaloneOptions = page.getByRole('listbox', {
+    name: 'Workspace switcher',
+  });
+  const switcherBounds = await standaloneSwitcher.boundingBox();
+  const overlayBounds = await standaloneOptions
+    .locator('..')
+    .locator('..')
+    .boundingBox();
+  expect(overlayBounds!.width).toBeCloseTo(switcherBounds!.width, 0);
   await page
     .getByRole('listbox', {name: 'Workspace switcher'})
     .getByRole('option', {name: /Client sandbox/})

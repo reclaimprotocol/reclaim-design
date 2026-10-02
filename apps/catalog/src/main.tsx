@@ -87,7 +87,7 @@ const noise = new URL('../../../assets/brand/noise.svg', import.meta.url).href;
 const catalogNavigation = [
   {
     label: 'Foundations',
-    items: ['Surface', 'Console overview', 'Interactive cards'],
+    items: ['Surface', 'Card types', 'Interactive cards'],
   },
   {
     label: 'Components',
@@ -373,7 +373,7 @@ function Overview() {
           </div>
         </div>
       </Section>
-      <Section eyebrow="02" title="Console overview">
+      <Section eyebrow="02" title="Card types">
         <div className="catalog-grid catalog-grid--four">
           <Kpi
             label="Proofs verified"
@@ -655,11 +655,15 @@ function Components() {
         <Card>
           <div className="catalog-stack">
             <label className="rc-field">
-              <span className="rc-field__label">Export format</span>
-              <select className="rc-select" defaultValue="feed" name="format">
-                <option value="feed">Feed · 1:1</option>
-                <option value="portrait">Portrait · 4:5</option>
-                <option value="story">Story · 9:16</option>
+              <span className="rc-field__label">Dropdown</span>
+              <select
+                className="rc-select"
+                defaultValue="option-one"
+                name="selection"
+              >
+                <option value="option-one">Option one</option>
+                <option value="option-two">Option two</option>
+                <option value="option-three">Option three</option>
               </select>
               <span className="rc-field__message">
                 Native select markup works in every framework.

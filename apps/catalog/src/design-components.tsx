@@ -33,6 +33,7 @@ function AnchoredOverlay({
   anchor,
   overlayRef,
   align = 'start',
+  matchAnchorWidth = false,
   className,
   children,
   ...props
@@ -41,6 +42,7 @@ function AnchoredOverlay({
     anchor: RefObject<HTMLElement | null>;
     overlayRef: RefObject<HTMLDivElement | null>;
     align?: 'start' | 'end';
+    matchAnchorWidth?: boolean;
     className?: string;
   } & HTMLAttributes<HTMLDivElement>
 >) {
@@ -53,7 +55,10 @@ function AnchoredOverlay({
       if (!target) {
         return;
       }
-      const bounds = target.getBoundingClientRect();
+      const sizingTarget = matchAnchorWidth
+        ? (target.querySelector<HTMLElement>('[aria-haspopup]') ?? target)
+        : target;
+      const bounds = sizingTarget.getBoundingClientRect();
       const viewportGap = 12;
       const overlayGap = 4;
       const roomBelow = window.innerHeight - bounds.bottom - viewportGap;
@@ -65,6 +70,12 @@ function AnchoredOverlay({
         maxWidth: `calc(100vw - ${viewportGap * 2}px)`,
         minWidth: Math.min(bounds.width, window.innerWidth - viewportGap * 2),
       };
+      if (matchAnchorWidth) {
+        next.width = Math.min(
+          bounds.width,
+          window.innerWidth - viewportGap * 2,
+        );
+      }
       if (side === 'below') {
         next.top = bounds.bottom + overlayGap;
       } else {
@@ -90,7 +101,7 @@ function AnchoredOverlay({
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
     };
-  }, [align, anchor]);
+  }, [align, anchor, matchAnchorWidth]);
 
   if (!style || typeof document === 'undefined') {
     return null;
@@ -1439,6 +1450,7 @@ export function Popover({
   onOpenChange,
   className,
   align = 'start',
+  matchAnchorWidth = false,
 }: {
   trigger: ReactNode;
   children: ReactNode;
@@ -1446,6 +1458,7 @@ export function Popover({
   onOpenChange?: (open: boolean) => void;
   className?: string;
   align?: 'start' | 'end';
+  matchAnchorWidth?: boolean;
 }) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
@@ -1495,6 +1508,7 @@ export function Popover({
           anchor={root}
           overlayRef={overlay}
           align={align}
+          matchAnchorWidth={matchAnchorWidth}
           className={classes('rc-popover__content', className)}
         >
           {children}
@@ -1597,6 +1611,7 @@ export function SwitcherDropdown<Value extends string = string>({
       className={classes('rc-switcher-dropdown', className)}
       open={open}
       onOpenChange={setOpen}
+      matchAnchorWidth
       trigger={
         <button
           type="button"

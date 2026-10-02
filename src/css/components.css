@@ -1586,7 +1586,7 @@
   }
   .rc-switcher-dropdown .rc-popover__content,
   .rc-switcher-dropdown.rc-popover__content {
-    inline-size: 100%;
+    box-sizing: border-box;
     padding: var(--rc-space-1);
   }
   .rc-switcher-dropdown__menu {
