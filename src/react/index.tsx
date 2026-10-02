@@ -14,8 +14,10 @@ import {
   type InputHTMLAttributes,
   type KeyboardEvent,
   type PropsWithChildren,
+  type RefObject,
   type ReactNode,
 } from 'react';
+import {createPortal} from 'react-dom';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'inline';
@@ -24,6 +26,89 @@ export type SemanticTone = 'neutral' | 'success' | 'warning' | 'danger';
 
 const classes = (...items: Array<string | undefined | false>) =>
   items.filter(Boolean).join(' ');
+
+type AnchoredOverlaySide = 'above' | 'below';
+
+function AnchoredOverlay({
+  anchor,
+  overlayRef,
+  align = 'start',
+  className,
+  children,
+  ...props
+}: PropsWithChildren<
+  {
+    anchor: RefObject<HTMLElement | null>;
+    overlayRef: RefObject<HTMLDivElement | null>;
+    align?: 'start' | 'end';
+    className?: string;
+  } & HTMLAttributes<HTMLDivElement>
+>) {
+  const [style, setStyle] = useState<CSSProperties>();
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const update = () => {
+      const target = anchor.current;
+      if (!target) {
+        return;
+      }
+      const bounds = target.getBoundingClientRect();
+      const viewportGap = 12;
+      const overlayGap = 4;
+      const roomBelow = window.innerHeight - bounds.bottom - viewportGap;
+      const roomAbove = bounds.top - viewportGap;
+      const side: AnchoredOverlaySide =
+        roomBelow < 220 && roomAbove > roomBelow ? 'above' : 'below';
+      const next: CSSProperties = {
+        maxHeight: Math.max(120, side === 'below' ? roomBelow : roomAbove),
+        maxWidth: `calc(100vw - ${viewportGap * 2}px)`,
+        minWidth: Math.min(bounds.width, window.innerWidth - viewportGap * 2),
+      };
+      if (side === 'below') {
+        next.top = bounds.bottom + overlayGap;
+      } else {
+        next.bottom = window.innerHeight - bounds.top + overlayGap;
+      }
+      if (align === 'end') {
+        next.right = Math.max(viewportGap, window.innerWidth - bounds.right);
+      } else {
+        next.left = Math.min(
+          Math.max(viewportGap, bounds.left),
+          Math.max(viewportGap, window.innerWidth - viewportGap - bounds.width),
+        );
+      }
+      setStyle(next);
+      setTheme(
+        target.closest<HTMLElement>('.rc-theme')?.dataset.theme ?? 'light',
+      );
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [align, anchor]);
+
+  if (!style || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      {...props}
+      ref={overlayRef}
+      className={classes('rc-anchored-overlay', className)}
+      data-theme={theme}
+      style={style}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
 
 type ThemeContextValue = {
   theme: ThemeMode;
@@ -207,6 +292,122 @@ export const Field = forwardRef<
     </label>
   );
 });
+
+export type RangeFieldProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'children' | 'defaultValue' | 'onChange' | 'type' | 'value'
+> & {
+  label: ReactNode;
+  value: number;
+  onChange: (value: number) => void;
+  formatValue?: (value: number) => ReactNode;
+  hint?: ReactNode;
+  error?: ReactNode;
+};
+
+export function RangeField({
+  label,
+  value,
+  onChange,
+  formatValue = current => current,
+  hint,
+  error,
+  className,
+  id,
+  ...props
+}: RangeFieldProps) {
+  const generatedId = useId().replaceAll(':', '');
+  const inputId = id ?? `rc-range-field-${generatedId}`;
+  const labelId = `${inputId}-label`;
+  const message = error ?? hint;
+  const messageId = `${inputId}-message`;
+  return (
+    <div className={classes('rc-field', 'rc-range-field', className)}>
+      <span className="rc-range-field__heading">
+        <span id={labelId} className="rc-field__label">
+          {label}
+        </span>
+        <output htmlFor={inputId}>{formatValue(value)}</output>
+      </span>
+      <input
+        {...props}
+        id={inputId}
+        type="range"
+        value={value}
+        aria-labelledby={props['aria-label'] ? undefined : labelId}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={message ? messageId : undefined}
+        onChange={event => onChange(event.currentTarget.valueAsNumber)}
+      />
+      <span
+        id={message ? messageId : undefined}
+        className={classes(
+          'rc-field__message',
+          error ? 'rc-field__message--error' : undefined,
+        )}
+        data-empty={!message || undefined}
+        aria-hidden={!message || undefined}
+      >
+        {message ?? '\u00a0'}
+      </span>
+    </div>
+  );
+}
+
+export type ColorFieldProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'children' | 'defaultValue' | 'onChange' | 'type' | 'value'
+> & {
+  label: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  hint?: ReactNode;
+  error?: ReactNode;
+};
+
+export function ColorField({
+  label,
+  value,
+  onChange,
+  hint,
+  error,
+  className,
+  id,
+  ...props
+}: ColorFieldProps) {
+  const generatedId = useId().replaceAll(':', '');
+  const inputId = id ?? `rc-color-field-${generatedId}`;
+  const message = error ?? hint;
+  const messageId = `${inputId}-message`;
+  return (
+    <label className={classes('rc-field', 'rc-color-field', className)}>
+      <span className="rc-field__label">{label}</span>
+      <span className="rc-color-field__control">
+        <input
+          {...props}
+          id={inputId}
+          type="color"
+          value={value}
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={message ? messageId : undefined}
+          onChange={event => onChange(event.currentTarget.value)}
+        />
+        <output htmlFor={inputId}>{value.toUpperCase()}</output>
+      </span>
+      <span
+        id={message ? messageId : undefined}
+        className={classes(
+          'rc-field__message',
+          error ? 'rc-field__message--error' : undefined,
+        )}
+        data-empty={!message || undefined}
+        aria-hidden={!message || undefined}
+      >
+        {message ?? '\u00a0'}
+      </span>
+    </label>
+  );
+}
 
 export function StatusPill({
   tone = 'neutral',
@@ -532,6 +733,175 @@ export function UploadField({
   );
 }
 
+export function UploadResult({
+  name,
+  description,
+  preview,
+  actions,
+  className,
+}: {
+  name: ReactNode;
+  description?: ReactNode;
+  preview?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={classes('rc-upload-result', className)}>
+      {preview && <span className="rc-upload-result__preview">{preview}</span>}
+      <span className="rc-upload-result__content">
+        <strong>{name}</strong>
+        {description && <small>{description}</small>}
+      </span>
+      {actions && <span className="rc-upload-result__actions">{actions}</span>}
+    </div>
+  );
+}
+
+export function PickerField({
+  label,
+  title,
+  description,
+  preview,
+  actionLabel = 'Choose',
+  onOpen,
+  disabled,
+  hint,
+  className,
+}: {
+  label: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  preview?: ReactNode;
+  actionLabel?: ReactNode;
+  onOpen: () => void;
+  disabled?: boolean;
+  hint?: ReactNode;
+  className?: string;
+}) {
+  const labelId = `rc-picker-field-${useId().replaceAll(':', '')}`;
+  return (
+    <div
+      className={classes('rc-picker-field', className)}
+      role="group"
+      aria-labelledby={labelId}
+    >
+      <span id={labelId} className="rc-field__label">
+        {label}
+      </span>
+      <div className="rc-picker-field__selection">
+        {preview && <span className="rc-picker-field__preview">{preview}</span>}
+        <span className="rc-picker-field__content">
+          <strong>{title}</strong>
+          {description && <small>{description}</small>}
+        </span>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={disabled}
+          onClick={onOpen}
+        >
+          {actionLabel}
+        </Button>
+      </div>
+      <span
+        className="rc-field__message"
+        data-empty={!hint || undefined}
+        aria-hidden={!hint || undefined}
+      >
+        {hint ?? '\u00a0'}
+      </span>
+    </div>
+  );
+}
+
+export type SelectionDialogItem<Value extends string = string> = {
+  value: Value;
+  label: ReactNode;
+  description?: ReactNode;
+  preview?: ReactNode;
+  disabled?: boolean;
+};
+
+export function SelectionDialog<Value extends string = string>({
+  open,
+  onClose,
+  title,
+  description,
+  items,
+  value,
+  onChange,
+  label = 'Options',
+  closeOnSelect = true,
+  columns = 'auto',
+  className,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: ReactNode;
+  description?: ReactNode;
+  items: ReadonlyArray<SelectionDialogItem<Value>>;
+  value: Value;
+  onChange: (value: Value) => void;
+  label?: string;
+  closeOnSelect?: boolean;
+  columns?: 1 | 2 | 3 | 'auto';
+  className?: string;
+}) {
+  const name = `rc-selection-dialog-${useId().replaceAll(':', '')}`;
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={title}
+      description={description}
+      width="min(760px, calc(100vw - 32px))"
+      className={classes('rc-selection-dialog', className)}
+    >
+      <fieldset
+        className="rc-selection-dialog__options"
+        style={
+          {
+            '--_selection-dialog-columns':
+              columns === 'auto'
+                ? 'repeat(auto-fit, minmax(min(16rem, 100%), 1fr))'
+                : `repeat(${columns}, minmax(0, 1fr))`,
+          } as CSSProperties
+        }
+      >
+        <legend className="rc-visually-hidden">{label}</legend>
+        {items.map(item => (
+          <ChoiceRow
+            key={item.value}
+            type="radio"
+            name={name}
+            value={item.value}
+            checked={item.value === value}
+            disabled={item.disabled}
+            title={item.label}
+            description={item.description}
+            onChange={checked => {
+              if (!checked) {
+                return;
+              }
+              onChange(item.value);
+              if (closeOnSelect) {
+                onClose();
+              }
+            }}
+          >
+            {item.preview && (
+              <span className="rc-selection-dialog__preview">
+                {item.preview}
+              </span>
+            )}
+          </ChoiceRow>
+        ))}
+      </fieldset>
+    </Dialog>
+  );
+}
+
 export type ToastMessage = {
   id: string;
   title?: ReactNode;
@@ -612,19 +982,26 @@ export function Kpi({
   );
 }
 
-export function SegmentedControl({
+export type SegmentedControlOption<Value extends string = string> = {
+  value: Value;
+  label: ReactNode;
+};
+
+export type SegmentedControlProps<Value extends string = string> = {
+  label: string;
+  value: Value;
+  options: ReadonlyArray<SegmentedControlOption<Value>>;
+  onChange: (value: Value) => void;
+  className?: string;
+};
+
+export function SegmentedControl<Value extends string = string>({
   label,
   value,
   options,
   onChange,
   className,
-}: {
-  label: string;
-  value: string;
-  options: ReadonlyArray<{value: string; label: ReactNode}>;
-  onChange: (value: string) => void;
-  className?: string;
-}) {
+}: SegmentedControlProps<Value>) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const move = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
@@ -735,11 +1112,31 @@ export function Sidebar({
   );
 }
 
-export type NavigationGroup = {
+export type NavItem<Value extends string = string> = {
+  value: Value;
   label: ReactNode;
-  items: ReadonlyArray<NavItem & {badge?: ReactNode}>;
+  icon?: ReactNode;
+  href?: string;
+  disabled?: boolean;
 };
-export function NavigationPane({
+
+export type NavigationGroup<Value extends string = string> = {
+  label: ReactNode;
+  items: ReadonlyArray<NavItem<Value> & {badge?: ReactNode}>;
+};
+
+export type NavigationPaneProps<Value extends string = string> = {
+  brand?: ReactNode;
+  switcher?: ReactNode;
+  groups: ReadonlyArray<NavigationGroup<Value>>;
+  value?: Value;
+  onNavigate?: (value: Value) => void;
+  footer?: ReactNode;
+  label?: string;
+  className?: string;
+};
+
+export function NavigationPane<Value extends string = string>({
   brand,
   switcher,
   groups,
@@ -748,16 +1145,7 @@ export function NavigationPane({
   footer,
   label = 'Primary navigation',
   className,
-}: {
-  brand?: ReactNode;
-  switcher?: ReactNode;
-  groups: ReadonlyArray<NavigationGroup>;
-  value?: string;
-  onNavigate?: (value: string) => void;
-  footer?: ReactNode;
-  label?: string;
-  className?: string;
-}) {
+}: NavigationPaneProps<Value>) {
   return (
     <Sidebar className={classes('rc-navigation-pane', className)} label={label}>
       {brand && <div className="rc-navigation-pane__brand">{brand}</div>}
@@ -967,13 +1355,6 @@ export function Breadcrumbs({
   );
 }
 
-export type NavItem = {
-  value: string;
-  label: ReactNode;
-  icon?: ReactNode;
-  href?: string;
-  disabled?: boolean;
-};
 export function BottomTabs({
   items,
   value,
@@ -1069,6 +1450,7 @@ export function Popover({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const root = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
   const setOpen = (next: boolean) => {
     setUncontrolledOpen(next);
     onOpenChange?.(next);
@@ -1078,7 +1460,11 @@ export function Popover({
       return;
     }
     const outside = (event: MouseEvent) => {
-      if (root.current && !root.current.contains(event.target as Node)) {
+      if (
+        root.current &&
+        !root.current.contains(event.target as Node) &&
+        !overlay.current?.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -1104,30 +1490,44 @@ export function Popover({
       <span className="rc-popover__trigger" onClick={() => setOpen(!open)}>
         {trigger}
       </span>
-      {open && <div className="rc-popover__content">{children}</div>}
+      {open && (
+        <AnchoredOverlay
+          anchor={root}
+          overlayRef={overlay}
+          align={align}
+          className={classes('rc-popover__content', className)}
+        >
+          {children}
+        </AnchoredOverlay>
+      )}
     </div>
   );
 }
 
-export function Dropdown({
+export type DropdownProps<Value extends string = string> = {
+  label: ReactNode;
+  options: ReadonlyArray<NavItem<Value>>;
+  value?: Value;
+  onChange: (value: Value) => void;
+  className?: string;
+  align?: 'start' | 'end';
+};
+
+export function Dropdown<Value extends string = string>({
   label,
   options,
   value,
   onChange,
   className,
-}: {
-  label: ReactNode;
-  options: ReadonlyArray<NavItem>;
-  value?: string;
-  onChange: (value: string) => void;
-  className?: string;
-}) {
+  align = 'start',
+}: DropdownProps<Value>) {
   const [open, setOpen] = useState(false);
   return (
     <Popover
       className={classes('rc-dropdown', className)}
       open={open}
       onOpenChange={setOpen}
+      align={align}
       trigger={
         <button
           type="button"
@@ -1162,14 +1562,25 @@ export function Dropdown({
   );
 }
 
-export type SwitcherItem = {
-  value: string;
+export type SwitcherItem<Value extends string = string> = {
+  value: Value;
   label: ReactNode;
   leading?: ReactNode;
   meta?: ReactNode;
   disabled?: boolean;
 };
-export function SwitcherDropdown({
+export type SwitcherDropdownProps<Value extends string = string> = {
+  items: ReadonlyArray<SwitcherItem<Value>>;
+  value: Value;
+  onChange: (value: Value) => void;
+  onAction?: () => void;
+  actionLabel?: ReactNode;
+  groupLabel?: ReactNode;
+  label?: string;
+  className?: string;
+};
+
+export function SwitcherDropdown<Value extends string = string>({
   items,
   value,
   onChange,
@@ -1178,16 +1589,7 @@ export function SwitcherDropdown({
   groupLabel = 'Options',
   label = 'Switcher',
   className,
-}: {
-  items: ReadonlyArray<SwitcherItem>;
-  value: string;
-  onChange: (value: string) => void;
-  onAction?: () => void;
-  actionLabel?: ReactNode;
-  groupLabel?: ReactNode;
-  label?: string;
-  className?: string;
-}) {
+}: SwitcherDropdownProps<Value>) {
   const [open, setOpen] = useState(false);
   const selected = items.find(item => item.value === value) ?? items[0];
   return (
@@ -1286,6 +1688,7 @@ export function Combobox({
   className?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
   const inputId = `rc-combobox-${useId().replaceAll(':', '')}`;
   const listId = `${inputId}-listbox`;
   const [open, setOpen] = useState(false),
@@ -1302,7 +1705,11 @@ export function Combobox({
       return;
     }
     const outside = (event: MouseEvent) => {
-      if (root.current && !root.current.contains(event.target as Node)) {
+      if (
+        root.current &&
+        !root.current.contains(event.target as Node) &&
+        !overlay.current?.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -1380,7 +1787,14 @@ export function Combobox({
         </button>
       </div>
       {open && (
-        <div id={listId} role="listbox" aria-label={label}>
+        <AnchoredOverlay
+          anchor={root}
+          overlayRef={overlay}
+          id={listId}
+          role="listbox"
+          aria-label={label}
+          className="rc-combobox__listbox"
+        >
           {filtered.length ? (
             filtered.map((option, index) => (
               <button
@@ -1400,7 +1814,201 @@ export function Combobox({
           ) : (
             <p className="rc-combobox__empty">{emptyMessage}</p>
           )}
-        </div>
+        </AnchoredOverlay>
+      )}
+    </div>
+  );
+}
+
+export type SearchableDropdownOption<Value extends string = string> = {
+  value: Value;
+  label: ReactNode;
+  text?: string;
+  meta?: ReactNode;
+  disabled?: boolean;
+  prominent?: boolean;
+};
+
+export type SearchableDropdownProps<Value extends string = string> = {
+  label: string;
+  options: ReadonlyArray<SearchableDropdownOption<Value>>;
+  value?: Value | null;
+  onChange: (value: Value) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  emptyMessage?: ReactNode;
+  supportingText?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+};
+
+export function SearchableDropdown<Value extends string = string>({
+  label,
+  options,
+  value,
+  onChange,
+  placeholder = 'Select an option',
+  searchPlaceholder = 'Search options',
+  emptyMessage = 'No options match.',
+  supportingText,
+  disabled,
+  className,
+}: SearchableDropdownProps<Value>) {
+  const root = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
+  const inputId = `rc-searchable-dropdown-${useId().replaceAll(':', '')}`;
+  const listId = `${inputId}-listbox`;
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
+  const selected = options.find(option => option.value === value);
+  const optionText = (option: SearchableDropdownOption<Value>) =>
+    option.text ?? String(option.label);
+  const filtered = options.filter(option => {
+    const searchable = `${optionText(option)} ${String(option.meta ?? '')}`;
+    return searchable.toLocaleLowerCase().includes(query.toLocaleLowerCase());
+  });
+  const close = () => {
+    setOpen(false);
+    setQuery('');
+    setActive(0);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const outside = (event: MouseEvent) => {
+      if (
+        root.current &&
+        !root.current.contains(event.target as Node) &&
+        !overlay.current?.contains(event.target as Node)
+      ) {
+        close();
+      }
+    };
+    document.addEventListener('mousedown', outside);
+    return () => document.removeEventListener('mousedown', outside);
+  }, [open]);
+
+  const choose = (option: SearchableDropdownOption<Value>) => {
+    if (!option.disabled) {
+      onChange(option.value);
+      close();
+    }
+  };
+  const keyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      close();
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setOpen(true);
+      const amount = event.key === 'ArrowDown' ? 1 : -1;
+      setActive(current =>
+        Math.max(0, Math.min(filtered.length - 1, current + amount)),
+      );
+    }
+    if (event.key === 'Enter' && open && filtered[active]) {
+      event.preventDefault();
+      choose(filtered[active]);
+    }
+  };
+
+  return (
+    <div
+      ref={root}
+      className={classes('rc-searchable-dropdown', className)}
+      data-open={open || undefined}
+    >
+      <label className="rc-field__label" htmlFor={inputId}>
+        {label}
+      </label>
+      <div className="rc-searchable-dropdown__control">
+        <input
+          id={inputId}
+          className="rc-input"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-activedescendant={
+            open && filtered[active] ? `${inputId}-option-${active}` : undefined
+          }
+          disabled={disabled}
+          value={open ? query : ''}
+          placeholder={
+            open
+              ? searchPlaceholder
+              : selected
+                ? optionText(selected)
+                : placeholder
+          }
+          onFocus={() => setOpen(true)}
+          onChange={event => {
+            setQuery(event.target.value);
+            setActive(0);
+            setOpen(true);
+          }}
+          onKeyDown={keyDown}
+        />
+        <button
+          type="button"
+          className="rc-searchable-dropdown__trigger"
+          aria-label={`Toggle ${label} options`}
+          aria-expanded={open}
+          disabled={disabled}
+          onClick={() => {
+            if (open) {
+              close();
+            } else {
+              setOpen(true);
+              requestAnimationFrame(() =>
+                root.current?.querySelector<HTMLInputElement>('input')?.focus(),
+              );
+            }
+          }}
+        >
+          <span aria-hidden="true">⌄</span>
+        </button>
+      </div>
+      {supportingText && (
+        <small className="rc-searchable-dropdown__supporting-text">
+          {supportingText}
+        </small>
+      )}
+      {open && (
+        <AnchoredOverlay
+          anchor={root}
+          overlayRef={overlay}
+          id={listId}
+          role="listbox"
+          aria-label={label}
+          className="rc-searchable-dropdown__listbox"
+        >
+          {filtered.length ? (
+            filtered.map((option, index) => (
+              <button
+                key={option.value}
+                id={`${inputId}-option-${index}`}
+                type="button"
+                role="option"
+                aria-selected={option.value === value}
+                data-active={index === active || undefined}
+                data-prominent={option.prominent || undefined}
+                disabled={option.disabled}
+                onMouseEnter={() => setActive(index)}
+                onClick={() => choose(option)}
+              >
+                <span>{option.label}</span>
+                {option.meta && <small>{option.meta}</small>}
+              </button>
+            ))
+          ) : (
+            <p className="rc-searchable-dropdown__empty">{emptyMessage}</p>
+          )}
+        </AnchoredOverlay>
       )}
     </div>
   );
@@ -1999,12 +2607,15 @@ export function LinearProgress({
   className?: string;
 }) {
   const percent = Math.max(0, Math.min(100, value));
+  const labelId = `rc-progress-${useId().replaceAll(':', '')}`;
   return (
     <div className={classes('rc-progress-wrap', className)}>
-      {label && <span>{label}</span>}
+      {label && <span id={labelId}>{label}</span>}
       <div
         className="rc-progress"
         role="progressbar"
+        aria-label={label ? undefined : 'Progress'}
+        aria-labelledby={label ? labelId : undefined}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}

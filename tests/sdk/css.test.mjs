@@ -25,6 +25,7 @@ test('CSS preserves framework-agnostic, semantic primitive selectors', () => {
     '.rc-field',
     '.rc-dialog',
     '.rc-combobox',
+    '.rc-searchable-dropdown',
     'details.rc-expansion',
     '.rc-table',
     '.rc-breadcrumbs',

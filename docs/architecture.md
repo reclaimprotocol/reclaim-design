@@ -6,14 +6,17 @@ points.
 ```text
 tokens/**/*.tokens.json ── build-tokens.mjs ── CSS + TypeScript
 
-specs/*.json ─┬─ semantic HTML/CSS contracts
+specs/*.yaml ─┬─ semantic HTML/CSS contracts
               ├─ framework-neutral ESM behaviors
               ├─ optional custom elements
               └─ React components and charts
 
-                         @reclaimprotocol/design
-                       ┌─────────┼──────────┐
-                    /css    /behaviors   /react + /charts
+@reclaimprotocol/design
+├── /css
+├── /behaviors
+├── /react
+├── /charts
+└── /brand
 ```
 
 ## Sources of truth

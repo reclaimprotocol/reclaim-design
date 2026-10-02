@@ -23,6 +23,7 @@ Use only exports declared in the root `package.json`.
 | React charts                          | `@reclaimprotocol/design/charts`                                       |
 | Custom elements                       | `@reclaimprotocol/design/elements`                                     |
 | SVG strings                           | `@reclaimprotocol/design/icons`                                        |
+| Approved Reclaim identity assets      | `@reclaimprotocol/design/brand`                                        |
 | Typed token values                    | `@reclaimprotocol/design/tokens`                                       |
 | Optional Oat browser runtime          | `@reclaimprotocol/design/oat`                                          |
 
@@ -115,6 +116,17 @@ export function SettingsForm() {
 Keep state controlled when a component provides `value`, `selectedIndex`, or
 `onChange` APIs. Keep routing, requests, validation rules, and persistence in
 the application.
+
+Use `RangeField` and `ColorField` for numeric sliders and native color input.
+Use `PickerField` as the current-selection summary and `SelectionDialog` as the
+single-choice overlay. The consumer owns the option data and preview content.
+Pair `UploadResult` with `UploadField` when you need to show the selected file
+and actions without adding file-processing policy to the design component.
+
+Choose selection controls by intent. Use `Dropdown` for short action menus,
+`SwitcherDropdown` for changing the current workspace or identity, `Combobox`
+for a conventional filterable field, and `SearchableDropdown` for a scope-like
+single selection that pairs searchable labels with secondary option metadata.
 
 ## Apply the visual contract
 

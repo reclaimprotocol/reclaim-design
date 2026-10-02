@@ -40,6 +40,18 @@
       "types": "./dist/icons/index.d.ts",
       "import": "./dist/icons/index.js"
     },
+    "./brand": {
+      "types": "./dist/brand/index.d.ts",
+      "import": "./dist/brand/index.js"
+    },
+    "./image-editor": {
+      "types": "./dist/image-editor/index.d.ts",
+      "import": "./dist/image-editor/index.js"
+    },
+    "./image-editor.css": {
+      "types": "./dist/style-entry.d.ts",
+      "default": "./dist/image-editor/image-editor.css"
+    },
     "./tokens": {
       "types": "./dist/tokens/types/tokens.d.ts",
       "import": "./dist/tokens/types/tokens.js"
@@ -101,6 +113,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck -w @reclaim/design-catalog",
     "catalog:dev": "npm run dev -w @reclaim/design-catalog",
     "catalog:build": "npm run build -w @reclaim/design-catalog",
+    "deploy": "npm run build && npx -y firebase-tools@latest deploy --only hosting --project reclaim-design-catalog",
     "verify": "npm run tokens:check && npm run style:check && npm test && npm run typecheck && npm run catalog:build",
     "verify:full": "npm run verify && npm run test:e2e"
   },

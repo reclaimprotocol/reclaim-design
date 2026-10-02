@@ -15,6 +15,19 @@ source.
 - Use [`DESIGN.md`](DESIGN.md) for visual rules, component composition, and
   agent-assisted product integration.
 
+## Deploy the catalog
+
+The catalog is bound to the `reclaim-design-catalog` Firebase project. Build and
+deploy it from the repository root:
+
+```sh
+npm run deploy
+```
+
+Firebase Hosting publishes `apps/catalog/dist`. The configuration preserves SPA
+navigation, disables caching for the HTML entry point, and caches hashed assets
+immutably.
+
 ## Install the package
 
 Install the package with your package manager:
@@ -130,6 +143,11 @@ export function VerificationForm() {
 React components use the same semantic classes and tokens as framework-neutral
 HTML. They don't require the Oat JavaScript runtime.
 
+Use `RangeField` and `ColorField` for labeled native controls with stable help
+or error space. Compose `PickerField` with `SelectionDialog` when an option
+needs a rich preview. Compose `UploadField` with `UploadResult` to show a local
+file, its metadata, and consumer-provided edit or clear actions.
+
 ## Use interactive charts
 
 Charts are exposed separately so applications that don't use them don't bundle
@@ -148,6 +166,40 @@ export function ActivityChart() {
   return <AreaChart data={activity} label="Daily activity" />;
 }
 ```
+
+## Edit uploaded images
+
+The optional image-editor entry point provides a local crop and framing dialog
+and a composed upload field. Import its styles explicitly alongside the shared
+design styles:
+
+```tsx
+import {
+  EditableImageField,
+  type EditedImage,
+} from '@reclaimprotocol/design/image-editor';
+import '@reclaimprotocol/design/image-editor.css';
+
+export function LogoField() {
+  const updateLogo = (image: EditedImage | null) => {
+    // Keep the data URL in local state or upload it with the surrounding form.
+  };
+
+  return (
+    <EditableImageField
+      label="Logo"
+      hint="Choose a PNG, JPEG, or WebP image."
+      aspectRatio={1}
+      defaultFit="contain"
+      onChange={updateLogo}
+    />
+  );
+}
+```
+
+The editor performs its work in the browser and returns a PNG data URL. Use the
+`ImageEditorDialog` export directly when file selection and state belong to the
+consuming application.
 
 ## Use tokens in TypeScript
 
@@ -179,6 +231,22 @@ const accessibleIcon = icon('shieldCheck', 'Verified');
 
 React applications can place the SVG in a trusted rendering boundary or wrap the
 icon entry with their own icon component.
+
+## Use Reclaim identity assets
+
+Approved transparent marks, color tiles, wordmarks, and lockups are available
+from the isolated brand entry point. Importing this registry lets a bundler copy
+the approved identity set into the application build.
+
+```ts
+import {reclaimLogos} from '@reclaimprotocol/design/brand';
+
+const blueMark = reclaimLogos.find(logo => logo.id === 'blue-transparent');
+```
+
+Each entry contains a stable `id`, a human-readable `label`, and a bundled image
+`src`. Use the label in asset pickers and use the source in an image element or
+canvas renderer.
 
 ## Use custom elements
 
@@ -300,19 +368,22 @@ npm run verify:full
 
 ## Public entry points
 
-| Entry point                              | Purpose                       | Runtime            |
-| ---------------------------------------- | ----------------------------- | ------------------ |
-| `@reclaimprotocol/design`                | Behaviors and icons barrel    | Browser or bundler |
-| `@reclaimprotocol/design/behaviors`      | Progressive DOM enhancement   | Browser            |
-| `@reclaimprotocol/design/behaviors/core` | DOM-free behavior helpers     | Any ESM runtime    |
-| `@reclaimprotocol/design/react`          | React components              | React              |
-| `@reclaimprotocol/design/charts`         | Interactive React SVG charts  | React              |
-| `@reclaimprotocol/design/elements`       | Custom-element registration   | Browser only       |
-| `@reclaimprotocol/design/icons`          | SVG icon strings              | Any ESM runtime    |
-| `@reclaimprotocol/design/tokens`         | Typed token values            | Any ESM runtime    |
-| `@reclaimprotocol/design/tokens.css`     | Token variables and themes    | CSS bundler        |
-| `@reclaimprotocol/design/css`            | Complete component stylesheet | CSS bundler        |
-| `@reclaimprotocol/design/oat`            | Optional Oat runtime          | Browser only       |
+| Entry point                                | Purpose                       | Runtime            |
+| ------------------------------------------ | ----------------------------- | ------------------ |
+| `@reclaimprotocol/design`                  | Behaviors and icons barrel    | Browser or bundler |
+| `@reclaimprotocol/design/behaviors`        | Progressive DOM enhancement   | Browser            |
+| `@reclaimprotocol/design/behaviors/core`   | DOM-free behavior helpers     | Any ESM runtime    |
+| `@reclaimprotocol/design/react`            | React components              | React              |
+| `@reclaimprotocol/design/charts`           | Interactive React SVG charts  | React              |
+| `@reclaimprotocol/design/elements`         | Custom-element registration   | Browser only       |
+| `@reclaimprotocol/design/icons`            | SVG icon strings              | Any ESM runtime    |
+| `@reclaimprotocol/design/brand`            | Approved identity assets      | Browser or bundler |
+| `@reclaimprotocol/design/image-editor`     | Local image editing controls  | React              |
+| `@reclaimprotocol/design/image-editor.css` | Image editor styles           | CSS bundler        |
+| `@reclaimprotocol/design/tokens`           | Typed token values            | Any ESM runtime    |
+| `@reclaimprotocol/design/tokens.css`       | Token variables and themes    | CSS bundler        |
+| `@reclaimprotocol/design/css`              | Complete component stylesheet | CSS bundler        |
+| `@reclaimprotocol/design/oat`              | Optional Oat runtime          | Browser only       |
 
 ## Licensing
 

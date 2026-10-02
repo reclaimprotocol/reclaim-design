@@ -1,0 +1,32 @@
+name: Searchable dropdown
+status: stable
+purpose:
+  Select one item from a growing set while exposing searchable labels and
+  secondary option metadata.
+states: [closed, open, filtering, empty, selected, disabled]
+anatomy:
+  [label, search-input, trigger, listbox, option-label, option-meta, helper]
+accessibility:
+  web:
+    'Follow the WAI-ARIA combobox/listbox pattern with active descendant
+    management.'
+  keyboard: [ArrowDown, ArrowUp, Enter, Escape]
+behavior:
+  filter:
+    'Type to narrow matches across the option label, search text, and metadata.'
+  selection:
+    'Choosing an option closes the list and restores its label as the input
+    placeholder.'
+  prominent_option:
+    'An optional prominent treatment separates a broad selection from narrower
+    choices.'
+  dismissal:
+    'Escape, the trigger, and an outside press close it without changing the
+    selection.'
+usage:
+  preferred:
+    'Use for searchable single-select scopes, catalogs, backgrounds, and other
+    growing sets.'
+  alternative:
+    'Use Dropdown for short action menus and SwitcherDropdown for identity or
+    workspace switching.'

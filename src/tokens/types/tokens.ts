@@ -206,7 +206,7 @@ export const themes = {
     "color.text.on-action": "#FFFFFF",
     "color.text.primary": "#121212",
     "color.text.secondary": "#333333",
-    "color.text.tertiary": "rgba(18,18,18,0.55)",
+    "color.text.tertiary": "rgba(18,18,18,0.65)",
     "combobox.menu-max-block-size": "280px",
     "component.button.height": "30px",
     "component.button.padding-inline": "12px",

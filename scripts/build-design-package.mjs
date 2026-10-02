@@ -15,6 +15,10 @@ if (mode === 'clean') {
   await mkdir(outputRoot, {recursive: true});
   await Promise.all([
     cp(join(sourceRoot, 'css'), join(outputRoot, 'css'), {recursive: true}),
+    cp(
+      join(sourceRoot, 'image-editor', 'image-editor.css'),
+      join(outputRoot, 'image-editor', 'image-editor.css'),
+    ),
     cp(join(sourceRoot, 'oat'), join(outputRoot, 'oat'), {recursive: true}),
     cp(
       join(sourceRoot, 'tokens', 'assets'),

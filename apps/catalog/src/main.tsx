@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from 'react';
+import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
 import {createRoot} from 'react-dom/client';
 import {
   AreaChart,
@@ -30,6 +24,7 @@ import {
   Chip,
   ChoiceRow,
   CircularProgress,
+  ColorField,
   Combobox,
   Dialog,
   Dropdown,
@@ -46,9 +41,13 @@ import {
   NavigationPane,
   PageHeader,
   PeriodPicker,
+  PickerField,
   ProfileMenu,
+  RangeField,
   ReclaimThemeProvider,
+  SearchableDropdown,
   SegmentedControl,
+  SelectionDialog,
   StatusPill,
   Switch,
   SwitcherDropdown,
@@ -57,6 +56,7 @@ import {
   ToastRegion,
   Tooltip,
   UploadField,
+  UploadResult,
   useReclaimTheme,
   type ToastMessage,
 } from '@reclaimprotocol/design/react';
@@ -71,8 +71,39 @@ const wordmark = new URL(
   import.meta.url,
 ).href;
 const noise = new URL('../../../assets/brand/noise.svg', import.meta.url).href;
-const navItems = ['Overview', 'Components', 'Patterns', 'Charts'] as const;
-type CatalogPage = (typeof navItems)[number];
+const catalogNavigation = [
+  {
+    label: 'Foundations',
+    items: ['Surface', 'Console overview', 'Interactive cards'],
+  },
+  {
+    label: 'Components',
+    items: [
+      'Buttons and status',
+      'Fields and validation',
+      'Selection',
+      'Foundation primitives',
+      'Selections in dialogs',
+      'Searchable dropdown',
+      'Menus, search and dates',
+      'Navigation overlays',
+      'Switcher dropdown',
+      'Navigation pane',
+      'App bar and page header',
+      'Settings and metadata',
+      'Guided flow',
+    ],
+  },
+  {
+    label: 'Patterns',
+    items: ['Data display', 'Loading and feedback', 'Expansion'],
+  },
+  {label: 'Charts', items: ['Chart fixtures']},
+] as const;
+const catalogSections = catalogNavigation.flatMap(group => group.items);
+type CatalogSection = (typeof catalogSections)[number];
+const sectionId = (title: string) =>
+  `section-${title.replaceAll(' ', '-').toLowerCase()}`;
 const volume: ChartDatum[] = [
   ['05 Sep', 42, 10],
   ['06 Sep', 63, 12],
@@ -136,6 +167,26 @@ const workspaces = [
   {value: 'sandbox', label: 'Client sandbox', leading: 'S', meta: 'test'},
   {value: 'personal', label: 'Personal workspace', leading: 'Y'},
 ] as const;
+const assetOptions = [
+  {
+    value: 'mark',
+    label: 'Square mark',
+    description: 'Compact product and application treatment.',
+    preview: <img src={rMark} alt="" />,
+  },
+  {
+    value: 'wordmark',
+    label: 'Wordmark',
+    description: 'Full-width editorial treatment.',
+    preview: <img src={wordmark} alt="" />,
+  },
+  {
+    value: 'monogram',
+    label: 'Text monogram',
+    description: 'A neutral fallback when imagery is unavailable.',
+    preview: <strong aria-hidden="true">R</strong>,
+  },
+] as const;
 
 function Section({
   eyebrow,
@@ -146,12 +197,17 @@ function Section({
   title: string;
   children: ReactNode;
 }) {
-  const id = title.replaceAll(' ', '-').toLowerCase();
+  const id = sectionId(title);
   return (
-    <section className="catalog-section" aria-labelledby={id}>
+    <section
+      id={id}
+      className="catalog-section"
+      data-catalog-section={title}
+      aria-labelledby={`${id}-title`}
+    >
       <div className="catalog-section-title">
         <span className="rc-eyebrow">{eyebrow}</span>
-        <h2 id={id}>{title}</h2>
+        <h2 id={`${id}-title`}>{title}</h2>
       </div>
       {children}
     </section>
@@ -179,11 +235,11 @@ function Guilloche() {
 }
 
 function BrandHeader({
-  page,
-  setPage,
+  activeSection,
+  onNavigate,
 }: {
-  page: CatalogPage;
-  setPage: (page: CatalogPage) => void;
+  activeSection: CatalogSection;
+  onNavigate: (section: CatalogSection) => void;
 }) {
   const {resolvedTheme, setTheme} = useReclaimTheme();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -217,30 +273,39 @@ function BrandHeader({
       </header>
       <aside className="catalog-sidebar" aria-label="Catalog navigation">
         <p className="rc-eyebrow">Design reference</p>
-        {navItems.map(item => (
-          <button
-            key={item}
-            className="catalog-nav"
-            aria-current={page === item ? 'page' : undefined}
-            onClick={() => setPage(item)}
-          >
-            {item}
-          </button>
-        ))}
+        <nav className="catalog-sidebar__nav">
+          {catalogNavigation.map(group => (
+            <div className="catalog-nav-group" key={group.label}>
+              <span className="catalog-nav-group__label">{group.label}</span>
+              {group.items.map(item => (
+                <a
+                  key={item}
+                  className="catalog-nav"
+                  href={`#${sectionId(item)}`}
+                  aria-current={activeSection === item ? 'location' : undefined}
+                  onClick={() => onNavigate(item)}
+                >
+                  {item}
+                </a>
+              ))}
+            </div>
+          ))}
+        </nav>
         <div className="catalog-sidebar__foot">
           <span className="rc-muted">Deterministic fixtures</span>
           <span>v0.1</span>
         </div>
       </aside>
-      <nav className="catalog-tabs" aria-label="Catalog pages">
-        {navItems.map(item => (
-          <button
+      <nav className="catalog-tabs" aria-label="Catalog sections">
+        {catalogSections.map(item => (
+          <a
             key={item}
-            aria-current={page === item ? 'page' : undefined}
-            onClick={() => setPage(item)}
+            href={`#${sectionId(item)}`}
+            aria-current={activeSection === item ? 'location' : undefined}
+            onClick={() => onNavigate(item)}
           >
             {item}
-          </button>
+          </a>
         ))}
       </nav>
       <MenuSheet
@@ -249,17 +314,23 @@ function BrandHeader({
         label="Catalog menu"
         className="catalog-menu-sheet"
       >
-        {navItems.map(item => (
-          <button
-            key={item}
-            aria-current={page === item ? 'page' : undefined}
-            onClick={() => {
-              setPage(item);
-              setMenuOpen(false);
-            }}
-          >
-            {item}
-          </button>
+        {catalogNavigation.map(group => (
+          <div className="catalog-menu-group" key={group.label}>
+            <span>{group.label}</span>
+            {group.items.map(item => (
+              <a
+                key={item}
+                href={`#${sectionId(item)}`}
+                aria-current={activeSection === item ? 'location' : undefined}
+                onClick={() => {
+                  onNavigate(item);
+                  setMenuOpen(false);
+                }}
+              >
+                {item}
+              </a>
+            ))}
+          </div>
         ))}
       </MenuSheet>
     </>
@@ -269,16 +340,6 @@ function BrandHeader({
 function Overview() {
   return (
     <>
-      <div className="catalog-page-heading">
-        <div>
-          <p className="rc-eyebrow">Reclaim protocol</p>
-          <h1 className="rc-page-title">Design system</h1>
-          <p className="rc-lede">
-            The reference surface, states, and console compositions.
-          </p>
-        </div>
-        <span className="catalog-code">RC/01</span>
-      </div>
       <Section eyebrow="01" title="Surface">
         <div className="catalog-surface-demo">
           <div className="catalog-surface-demo__content">
@@ -361,6 +422,7 @@ function Components() {
   const [tags, setTags] = useState(['gig work']);
   const [region, setRegion] = useState('Australia');
   const [provider, setProvider] = useState<string | null>('chase');
+  const [scope, setScope] = useState('all');
   const [sort, setSort] = useState('recent');
   const [period, setPeriod] = useState('7d');
   const [query, setQuery] = useState('');
@@ -378,6 +440,13 @@ function Components() {
   const [switcherValue, setSwitcherValue] = useState('product');
   const [flowName, setFlowName] = useState('');
   const [flowError, setFlowError] = useState<ReactNode>(null);
+  const [rangeValue, setRangeValue] = useState(68);
+  const [colorValue, setColorValue] = useState('#0017ee');
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+  const [assetValue, setAssetValue] =
+    useState<(typeof assetOptions)[number]['value']>('mark');
+  const selectedAsset =
+    assetOptions.find(option => option.value === assetValue) ?? assetOptions[0];
   const choices = [
     'Australia',
     'India',
@@ -386,15 +455,6 @@ function Components() {
   ].filter(value => value.toLowerCase().includes(query.toLowerCase()));
   return (
     <>
-      <div className="catalog-page-heading">
-        <div>
-          <p className="rc-eyebrow">Component inventory</p>
-          <h1 className="rc-page-title">Controls and states</h1>
-          <p className="rc-lede">
-            Every visible state is deterministic and reviewable.
-          </p>
-        </div>
-      </div>
       <Section eyebrow="01" title="Buttons and status">
         <Card>
           <div className="catalog-row">
@@ -437,6 +497,21 @@ function Components() {
               label="Disabled field"
               defaultValue="Not editable"
               disabled
+            />
+            <RangeField
+              label="Preview scale"
+              min={40}
+              max={100}
+              value={rangeValue}
+              onChange={setRangeValue}
+              formatValue={value => `${value}%`}
+              hint="Adjust a numeric value without adding hover effects."
+            />
+            <ColorField
+              label="Accent color"
+              value={colorValue}
+              onChange={setColorValue}
+              hint="Use a native color input with a readable value."
             />
           </div>
           <p className="catalog-note">
@@ -590,6 +665,17 @@ function Components() {
               hint="PNG, JPG, or WebP up to the product limit."
               accept="image/png,image/jpeg,image/webp"
             />
+            <UploadResult
+              name="organization-photo.png"
+              description="PNG · 128 KB"
+              preview={<img src={rMark} alt="" />}
+              actions={
+                <>
+                  <Button variant="secondary">Edit</Button>
+                  <Button variant="secondary">Clear</Button>
+                </>
+              }
+            />
           </Card>
         </div>
         <Card>
@@ -653,6 +739,15 @@ function Components() {
       </Section>
       <Section eyebrow="04" title="Selections in dialogs">
         <Card>
+          <PickerField
+            label="Approved asset"
+            title={selectedAsset.label}
+            description={selectedAsset.description}
+            preview={selectedAsset.preview}
+            actionLabel="Choose asset"
+            onOpen={() => setAssetPickerOpen(true)}
+            hint="The consumer supplies the options and preview content."
+          />
           <div className="catalog-row">
             <Button
               data-testid="catalog-dialog-trigger"
@@ -670,7 +765,52 @@ function Components() {
           </div>
         </Card>
       </Section>
-      <Section eyebrow="05" title="Menus, search and dates">
+      <Section eyebrow="05" title="Searchable dropdown">
+        <Card>
+          <PanelTitle
+            title="Scope selector"
+            meta="Searchable single selection with option metadata"
+          />
+          <div className="catalog-searchable-dropdown-specimen">
+            <SearchableDropdown
+              className="catalog-scope-dropdown"
+              label="Scope"
+              value={scope}
+              onChange={setScope}
+              searchPlaceholder="Search providers"
+              supportingText={
+                scope === 'all'
+                  ? 'Across all providers'
+                  : 'Filtered to one provider'
+              }
+              options={[
+                {
+                  value: 'all',
+                  label: 'All providers',
+                  meta: '42',
+                  prominent: true,
+                },
+                {
+                  value: 'uber-earnings',
+                  label: 'uber-earnings',
+                  meta: 'uber.com',
+                },
+                {
+                  value: 'chase-balance',
+                  label: 'chase-balance',
+                  meta: 'chase.com',
+                },
+                {
+                  value: 'coursera-certs',
+                  label: 'coursera-certs',
+                  meta: 'coursera.org',
+                },
+              ]}
+            />
+          </div>
+        </Card>
+      </Section>
+      <Section eyebrow="05A" title="Menus, search and dates">
         <Card>
           <div className="catalog-form">
             <Combobox
@@ -1132,6 +1272,16 @@ function Components() {
           )}
         </div>
       </Dialog>
+      <SelectionDialog
+        open={assetPickerOpen}
+        onClose={() => setAssetPickerOpen(false)}
+        title="Choose an approved asset"
+        description="Select one treatment for this surface."
+        label="Approved assets"
+        items={assetOptions}
+        value={assetValue}
+        onChange={setAssetValue}
+      />
     </>
   );
 }
@@ -1143,15 +1293,6 @@ function Patterns() {
   const [callbackAdded, setCallbackAdded] = useState(false);
   return (
     <>
-      <div className="catalog-page-heading">
-        <div>
-          <p className="rc-eyebrow">Product patterns</p>
-          <h1 className="rc-page-title">Data, feedback, navigation</h1>
-          <p className="rc-lede">
-            Console-shaped compositions using shared semantic primitives.
-          </p>
-        </div>
-      </div>
       <Section eyebrow="01" title="Data display">
         <div className="catalog-console-grid">
           <Card>
@@ -1207,6 +1348,9 @@ function Patterns() {
           <PanelTitle title="Verification sessions" meta="1–3 of 128,441" />
           <div
             className="rc-table"
+            role="table"
+            aria-label="Verification sessions"
+            tabIndex={0}
             style={
               {
                 '--rc-table-columns':
@@ -1214,26 +1358,32 @@ function Patterns() {
               } as CSSProperties
             }
           >
-            <div className="rc-table__header">
-              <span>Session ID</span>
-              <span>Provider</span>
-              <span>Status</span>
+            <div className="rc-table__header" role="row">
+              <span role="columnheader">Session ID</span>
+              <span role="columnheader">Provider</span>
+              <span role="columnheader">Status</span>
             </div>
             {[
               '9f4c2b71-a12e-4c9d-8b31',
               '2b717c04-ff03-4a17-9c62',
               '77de3f90-21aa-4e58-8f04',
             ].map((id, index) => (
-              <div className="rc-table__row" key={id}>
-                <span className="rc-identifier rc-truncate" title={id}>
+              <div className="rc-table__row" role="row" key={id}>
+                <span
+                  role="cell"
+                  className="rc-identifier rc-truncate"
+                  title={id}
+                >
                   {id}
                 </span>
-                <span>
+                <span role="cell">
                   {index === 1 ? 'uber-earnings' : 'acme-chase-balance'}
                 </span>
-                <StatusPill tone={index === 1 ? 'failed' : 'verified'}>
-                  {index === 1 ? 'Failed' : 'Verified'}
-                </StatusPill>
+                <span role="cell">
+                  <StatusPill tone={index === 1 ? 'failed' : 'verified'}>
+                    {index === 1 ? 'Failed' : 'Verified'}
+                  </StatusPill>
+                </span>
               </div>
             ))}
           </div>
@@ -1350,16 +1500,6 @@ function Patterns() {
 function Charts() {
   return (
     <>
-      <div className="catalog-page-heading">
-        <div>
-          <p className="rc-eyebrow">Data visualization</p>
-          <h1 className="rc-page-title">Mono charts</h1>
-          <p className="rc-lede">
-            Local interactive SVG charts with pointer, focus, click, Enter, and
-            Space support.
-          </p>
-        </div>
-      </div>
       <Section eyebrow="01" title="Chart fixtures">
         <div className="catalog-grid catalog-grid--two">
           <Card className="catalog-chart-card">
@@ -1399,7 +1539,7 @@ function Charts() {
 }
 
 function Catalog() {
-  const [page, setPage] = useState<CatalogPage>('Overview');
+  const [activeSection, setActiveSection] = useState<CatalogSection>('Surface');
   useEffect(() => {
     const controllers = [
       createCopyController(document),
@@ -1408,16 +1548,38 @@ function Catalog() {
     ];
     return () => controllers.forEach(controller => controller.destroy());
   }, []);
-  const content = useMemo(
-    () =>
-      ({
-        Overview: <Overview />,
-        Components: <Components />,
-        Patterns: <Patterns />,
-        Charts: <Charts />,
-      }) satisfies Record<CatalogPage, ReactNode>,
-    [],
-  );
+  useEffect(() => {
+    let frame = 0;
+    const updateActiveSection = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        let next: CatalogSection = catalogSections[0];
+        for (const title of catalogSections) {
+          const section = document.getElementById(sectionId(title));
+          if (section && section.getBoundingClientRect().top <= 112) {
+            next = title;
+          } else {
+            break;
+          }
+        }
+        if (
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 2
+        ) {
+          next = catalogSections.at(-1) ?? next;
+        }
+        setActiveSection(next);
+      });
+    };
+    updateActiveSection();
+    window.addEventListener('scroll', updateActiveSection, {passive: true});
+    window.addEventListener('resize', updateActiveSection);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', updateActiveSection);
+      window.removeEventListener('resize', updateActiveSection);
+    };
+  }, []);
   return (
     <div data-testid="catalog-root">
       <div
@@ -1427,9 +1589,26 @@ function Catalog() {
         style={{'--catalog-noise': `url(${noise})`} as CSSProperties}
       >
         <Guilloche />
-        <BrandHeader page={page} setPage={setPage} />
-        <main className="catalog-main" key={page}>
-          {content[page]}
+        <BrandHeader
+          activeSection={activeSection}
+          onNavigate={setActiveSection}
+        />
+        <main className="catalog-main">
+          <div className="catalog-page-heading">
+            <div>
+              <p className="rc-eyebrow">Reclaim protocol</p>
+              <h1 className="rc-page-title">Component reference</h1>
+              <p className="rc-lede">
+                Every component, interaction state, product pattern, and chart
+                in one navigable reference.
+              </p>
+            </div>
+            <span className="catalog-code">RC/01</span>
+          </div>
+          <Overview />
+          <Components />
+          <Patterns />
+          <Charts />
         </main>
       </div>
     </div>

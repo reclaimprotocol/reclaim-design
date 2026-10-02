@@ -30,11 +30,17 @@ test('react package exposes console and contributor-flow primitives', () => {
     'Tabs',
     'TagInput',
     'UploadField',
+    'UploadResult',
+    'RangeField',
+    'ColorField',
+    'PickerField',
+    'SelectionDialog',
     'ToastRegion',
     'SwitcherDropdown',
     'LinearProgress',
     'CircularProgress',
     'Combobox',
+    'SearchableDropdown',
     'Chip',
     'ChoiceRow',
     'StatusIndicator',
@@ -70,4 +76,7 @@ test('interactive primitives retain native keyboard and dialog semantics', () =>
   assert.match(source, /role="table"/);
   assert.match(source, /role="progressbar"/);
   assert.match(source, /aria-current=\{index === current \? ['"]step['"]/);
+  assert.match(source, /type="range"/);
+  assert.match(source, /type="color"/);
+  assert.match(source, /className="rc-selection-dialog__options"/);
 });

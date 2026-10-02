@@ -1,0 +1,14 @@
+name: Upload
+status: stable
+components:
+  - name: UploadField
+    purpose: Let a user choose one or more local files.
+    semantics: 'Use a labeled native file input and state accepted formats.'
+  - name: UploadResult
+    purpose: Show a selected file with optional preview, metadata, and actions.
+    semantics:
+      'Keep edit and clear operations as native buttons supplied through the
+      actions slot.'
+accessibility:
+  preview: 'Use empty alternative text when the adjacent name identifies it.'
+  status: 'Announce upload progress separately with a status or progress UI.'

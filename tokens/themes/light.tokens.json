@@ -14,7 +14,7 @@
     "text": {
       "primary": {"$type": "color", "$value": "{color.neutral.900}"},
       "secondary": {"$type": "color", "$value": "{color.neutral.700}"},
-      "tertiary": {"$type": "color", "$value": "rgba(18,18,18,0.55)"},
+      "tertiary": {"$type": "color", "$value": "rgba(18,18,18,0.65)"},
       "on-action": {"$type": "color", "$value": "{color.neutral.000}"},
       "code": {"$type": "color", "$value": "{color.neutral.000}"}
     },

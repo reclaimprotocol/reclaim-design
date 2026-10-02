@@ -3,7 +3,7 @@ status: stable
 purpose:
   Capture one editable value with a visible label and concise help or
   validation.
-variants: [text, password, search, date, textarea, read-only]
+variants: [text, password, search, date, textarea, read-only, range, color]
 states: [default, focused, disabled, invalid, valid]
 anatomy: [label, control, optional-marker, help-text, validation-message]
 accessibility:
@@ -22,3 +22,12 @@ platformNotes:
     'Use a labeled TextField; support text-size and keyboard-appropriate content
     type.'
   android: 'Use labeled OutlinedTextField and error semantics.'
+react:
+  range:
+    component: RangeField
+    behavior:
+      'Show the formatted current value and send a number to the change
+      callback.'
+  color:
+    component: ColorField
+    behavior: 'Show the normalized color value beside the native color input.'

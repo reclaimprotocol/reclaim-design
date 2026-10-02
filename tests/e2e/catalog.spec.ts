@@ -2,10 +2,15 @@ import {expect, test} from '@playwright/test';
 import axe from 'axe-core';
 
 async function openPage(page: import('@playwright/test').Page, name: string) {
-  await page
-    .locator('button:visible', {hasText: new RegExp(`^${name}$`)})
-    .first()
-    .click();
+  const destinations: Record<string, string> = {
+    Overview: 'surface',
+    Components: 'buttons-and-status',
+    Patterns: 'data-display',
+    Charts: 'chart-fixtures',
+  };
+  const section = `section-${destinations[name]}`;
+  await page.locator(`a[href="#${section}"]:visible`).first().click();
+  await expect(page.locator(`#${section}`)).toBeInViewport();
 }
 
 test.beforeEach(async ({page}) => {
@@ -124,7 +129,7 @@ test('validation and dialogs expose complete interaction states', async ({
   const fieldHeightBefore = (await field.locator('xpath=..').boundingBox())
     ?.height;
   await field.focus();
-  await page.getByRole('heading', {name: 'Controls and states'}).click();
+  await page.getByRole('heading', {name: 'Buttons and status'}).click();
   await expect(field).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByText('Enter a complete HTTPS URL.')).toBeVisible();
   expect((await field.locator('xpath=..').boundingBox())?.height).toBe(
@@ -195,9 +200,9 @@ test('validation and dialogs expose complete interaction states', async ({
 
   const profileTrigger = page.getByLabel('Open profile menu').first();
   await profileTrigger.click();
-  const profilePopover = profileTrigger.locator(
-    `xpath=../following-sibling::*[contains(@class, 'rc-popover__content')]`,
-  );
+  const profilePopover = page.locator('.rc-popover__content').filter({
+    has: page.getByRole('button', {name: 'Account settings'}),
+  });
   await expect(profilePopover).toBeVisible();
   expect(
     await profilePopover.evaluate(element => getComputedStyle(element).width),
@@ -210,6 +215,39 @@ test('validation and dialogs expose complete interaction states', async ({
   ).toHaveCSS('justify-content', 'flex-start');
   const signOut = profilePopover.getByRole('button', {name: 'Sign out'});
   await expect(signOut).toHaveCSS('color', 'rgb(255, 158, 196)');
+});
+
+test('searchable dropdown filters metadata and selects a scope', async ({
+  page,
+}) => {
+  await openPage(page, 'Components');
+  const scope = page.getByRole('combobox', {name: 'Scope'});
+
+  await scope.click();
+  const listbox = page.getByRole('listbox', {name: 'Scope'});
+  await expect(listbox).toBeVisible();
+  await expect(listbox).toHaveCSS('position', 'fixed');
+  const listboxBounds = await listbox.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(listboxBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(listboxBounds!.y).toBeGreaterThanOrEqual(0);
+  expect(listboxBounds!.x + listboxBounds!.width).toBeLessThanOrEqual(
+    viewport.width,
+  );
+  expect(listboxBounds!.y + listboxBounds!.height).toBeLessThanOrEqual(
+    viewport.height,
+  );
+  await expect(page.getByRole('option')).toHaveCount(4);
+  await scope.fill('coursera.org');
+  await expect(page.getByRole('option')).toHaveCount(1);
+  await page.getByRole('option', {name: /coursera-certs/}).click();
+  await expect(scope).toHaveAttribute('placeholder', 'coursera-certs');
+
+  await scope.click();
+  await scope.fill('missing');
+  await expect(page.getByText('No options match.')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox', {name: 'Scope'})).toBeHidden();
 });
 
 test('toast, generic switcher, navigation switcher, and guided flow expose working states', async ({
@@ -291,6 +329,12 @@ test('the responsive shell never creates page-level horizontal overflow', async 
     await page.keyboard.press('Escape');
     await expect(page.locator('.rc-menu-sheet-layer')).toHaveCount(0);
   }
+  const searchableLink = page.locator(
+    'a[href="#section-searchable-dropdown"]:visible',
+  );
+  await searchableLink.first().click();
+  await expect(page).toHaveURL(/#section-searchable-dropdown$/);
+  await expect(page.locator('#section-searchable-dropdown')).toBeInViewport();
   expect(
     await page.evaluate(
       () =>
@@ -389,10 +433,15 @@ test('expansion disclosure and build sequence use compact horizontal spacing', a
 
 test('mono charts expose pointer and keyboard interaction', async ({page}) => {
   await openPage(page, 'Charts');
-  const charts = page.locator('.catalog-chart');
+  const chartSection = page.locator('#section-chart-fixtures');
+  const charts = chartSection.locator('.catalog-chart');
   await expect(charts).toHaveCount(6);
-  await expect(page.getByText('No activity', {exact: true})).toHaveCount(0);
-  await expect(page.getByText('Empty state', {exact: true})).toHaveCount(0);
+  await expect(
+    chartSection.getByText('No activity', {exact: true}),
+  ).toHaveCount(0);
+  await expect(
+    chartSection.getByText('Empty state', {exact: true}),
+  ).toHaveCount(0);
   const bar = charts.nth(0).locator('.catalog-chart__series').first();
   await bar.focus();
   await expect(bar).toHaveAttribute('data-active', 'true');

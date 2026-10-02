@@ -1,0 +1,37 @@
+name: Image editor
+status: stable
+purpose:
+  Select, crop, scale, frame, preview, and clear one image without sending it to
+  a server.
+entry_point: '@reclaimprotocol/design/image-editor'
+styles: '@reclaimprotocol/design/image-editor.css'
+variants: [cover, contain, transparent-background, solid-background]
+anatomy:
+  [
+    upload-field,
+    canvas-preview,
+    fit-control,
+    zoom-control,
+    padding-control,
+    background-control,
+    actions,
+  ]
+accessibility:
+  web:
+    'Use the shared modal dialog, associate every control with a visible label,
+    and announce load or export failures as alerts.'
+  keyboard: [Tab, Shift+Tab, Escape]
+behavior:
+  privacy:
+    'Selected files remain in the browser unless the consumer uploads them.'
+  export:
+    'The apply action returns a PNG data URL at the configured output width.'
+  cleanup:
+    'Object URLs are revoked when files change, clear, or the field unmounts.'
+  pointer:
+    'Dragging the canvas repositions the image; sliders provide non-drag
+    controls.'
+tokens:
+  surface: color.surface.panel
+  border: color.border.strong
+  focus: color.action.primary
