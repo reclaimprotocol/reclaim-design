@@ -6,9 +6,9 @@ contract, interaction rules, and verification requirements.
 
 ## Integration objective
 
-Build interfaces from the package's tokens, CSS classes, behaviors, React
-components, charts, icons, and custom elements. Keep application data, routing,
-and domain logic in the consuming application.
+Build interfaces from the package's tokens, semantic CSS classes, behaviors,
+icons, Oat elements, and Reclaim custom elements. Keep application data,
+routing, product composition, and domain logic in the consuming application.
 
 ## Choose public entry points
 
@@ -19,8 +19,6 @@ Use only exports declared in the root `package.json`.
 | Complete tokens and component styling | `@reclaimprotocol/design/tokens.css` and `@reclaimprotocol/design/css` |
 | Semantic HTML or HTMX behavior        | `@reclaimprotocol/design/behaviors`                                    |
 | DOM-free behavior helpers             | `@reclaimprotocol/design/behaviors/core`                               |
-| React components                      | `@reclaimprotocol/design/react`                                        |
-| React charts                          | `@reclaimprotocol/design/charts`                                       |
 | Custom elements                       | `@reclaimprotocol/design/elements`                                     |
 | SVG strings                           | `@reclaimprotocol/design/icons`                                        |
 | Approved Reclaim identity assets      | `@reclaimprotocol/design/brand`                                        |
@@ -36,12 +34,6 @@ Install the design package:
 
 ```sh
 npm install @reclaimprotocol/design
-```
-
-Install React peer dependencies when the application uses `/react` or `/charts`:
-
-```sh
-npm install @reclaimprotocol/design react react-dom
 ```
 
 Load tokens before component CSS in the application entry point:
@@ -87,46 +79,27 @@ export function disposeDesignBehaviors() {
 The delegated behavior controller supports server-rendered fragments and HTMX
 swaps without component remounting.
 
-## Integrate React
+## Compose application components
 
-Compose application-specific features from exported primitives:
+Framework applications render the same semantic HTML shown in the catalog. Keep
+values controlled through native properties and events. Keep routing, requests,
+validation policy, persistence, and feature-specific composition in the
+application.
 
-```tsx
-import {
-  Button,
-  Card,
-  Field,
-  ReclaimThemeProvider,
-} from '@reclaimprotocol/design/react';
-import '@reclaimprotocol/design/tokens.css';
-import '@reclaimprotocol/design/css';
+Use native inputs for fields, ranges, colors, and radio cards. Use Oat's
+`ot-tabs` element for tabs and load `@reclaimprotocol/design/oat` at the browser
+boundary. Use delegated Reclaim behaviors for document-level interactions.
 
-export function SettingsForm() {
-  return (
-    <ReclaimThemeProvider defaultTheme="system">
-      <Card>
-        <Field label="Callback URL" name="callback" type="url" />
-        <Button type="submit">Save callback</Button>
-      </Card>
-    </ReclaimThemeProvider>
-  );
-}
-```
+Register `@reclaimprotocol/design/elements` when the application uses
+`rc-local-asset-field`, `rc-image-editor`, or another stateful composite. Set
+complex callbacks such as local asset preparation through JavaScript properties,
+and listen to their documented DOM events.
 
-Keep state controlled when a component provides `value`, `selectedIndex`, or
-`onChange` APIs. Keep routing, requests, validation rules, and persistence in
-the application.
-
-Use `RangeField` and `ColorField` for numeric sliders and native color input.
-Use `PickerField` as the current-selection summary and `SelectionDialog` as the
-single-choice overlay. The consumer owns the option data and preview content.
-Pair `UploadResult` with `UploadField` when you need to show the selected file
-and actions without adding file-processing policy to the design component.
-
-Choose selection controls by intent. Use `Dropdown` for short action menus,
-`SwitcherDropdown` for changing the current workspace or identity, `Combobox`
-for a conventional filterable field, and `SearchableDropdown` for a scope-like
-single selection that pairs searchable labels with secondary option metadata.
+- Set `rc-local-asset-field.prepare` to an async function when a file needs
+  local preprocessing. Listen for `reclaim:assetchange`,
+  `reclaim:assetstatechange`, and `reclaim:assetclear`.
+- Set `rc-image-editor.source`, call `open()`, and listen for
+  `reclaim:imageapply`. Read the PNG data URL from `event.detail.dataUrl`.
 
 ## Apply the visual contract
 
@@ -189,9 +162,9 @@ ornament are disabled.
 
 ## Handle browser-only entry points
 
-Import `/elements`, `/behaviors`, and `/oat` from client code. React components,
-charts, tokens, and DOM-free helpers have dedicated entry points that keep
-runtime boundaries explicit.
+Import `/elements`, `/behaviors`, and `/oat` from client code. Tokens and
+DOM-free helpers have dedicated entry points that keep runtime boundaries
+explicit.
 
 For Vite applications, include the asset declarations:
 
@@ -218,7 +191,7 @@ An agent must complete this checklist:
 9. Test reduced motion and high text scaling.
 10. Test desktop, tablet, and phone widths for page-level overflow.
 11. Run accessibility automation and review dialog focus manually.
-12. Confirm that unused framework entry points stay out of the bundle.
+12. Confirm that unused browser behaviors and elements stay out of the bundle.
 
 ## Agent task template
 

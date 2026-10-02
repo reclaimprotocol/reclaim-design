@@ -5,5 +5,6 @@
 @import url('./oat-theme.css') layer(rc-tokens);
 @import url('./base.css') layer(rc-base);
 @import url('./components.css') layer(rc-components);
+@import url('./asset-elements.css') layer(rc-components);
 @import url('./effects.css') layer(rc-effects);
 @import url('./utilities.css') layer(rc-utilities);

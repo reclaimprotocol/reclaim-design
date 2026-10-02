@@ -4,8 +4,8 @@
 
 ## Scope and source of truth
 
-This repository is the reusable Reclaim web design system for framework-neutral
-HTML/CSS/JavaScript and React.
+This repository is the reusable Reclaim web design system for semantic HTML,
+CSS, and framework-neutral JavaScript.
 
 Use this source priority:
 
@@ -23,8 +23,12 @@ Use this source priority:
   `@reclaimprotocol/design` package.
 - Keep `src/css` framework-neutral and semantic.
 - Keep DOM behavior in `src/behaviors`; basic content must work without it.
-- Keep React adapters and local SVG charts in their own `/react` and `/charts`
-  subpath exports. Framework-neutral entry points must not import React.
+- Extend the pinned Oat foundation through Reclaim tokens, semantic classes,
+  delegated behaviors, and small custom elements. Don't edit vendored Oat.
+- Reserve `src/elements` for stateful composites that native HTML and delegated
+  behavior can't express clearly.
+- Don't add framework components or framework dependencies. Framework
+  applications render the documented semantic markup themselves.
 - Preserve separate ESM entry points and named exports so consumers can
   tree-shake unused code. Keep CSS as an explicit opt-in side effect.
 
@@ -70,7 +74,8 @@ Use this source priority:
 ## Assets and licensing
 
 - Use local assets in `assets/brand`; never hotlink them.
-- Interactive charts are local SVG React components.
+- Keep charts in consuming applications and apply the documented chart markup,
+  tokens, and interaction contract.
 - GnuMICR is optional ornament and must never carry required information.
 - Read `THIRD_PARTY_NOTICES.md` before packaging GnuMICR. Treat the font files
   as development-only assets under the repository's current licensing policy.

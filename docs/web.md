@@ -18,6 +18,67 @@ Load tokens before components. Local application overrides should come last.
 The component entry includes the pinned Oat foundation in the lower `oat`
 cascade layer.
 
+## Semantic form patterns
+
+Build fields from native controls. The `rc-` classes provide the visual contract
+without owning application state:
+
+```html
+<label class="rc-field">
+  <span class="rc-field__label">Format</span>
+  <select class="rc-select" name="format">
+    <option value="feed">Feed · 1:1</option>
+    <option value="story">Story · 9:16</option>
+  </select>
+  <span class="rc-field__message">Choose an output format.</span>
+</label>
+```
+
+Use a fieldset and native radio inputs for descriptive, exclusive choices:
+
+```html
+<fieldset class="rc-radio-cards">
+  <legend>Publishing policy</legend>
+  <label class="rc-radio-card">
+    <input name="policy" type="radio" value="review" checked />
+    <span class="rc-radio-card__content">
+      <strong>Review before publish</strong>
+      <small>A person approves every change.</small>
+    </span>
+  </label>
+</fieldset>
+```
+
+Listen to native `change` events in the application. TypeScript consumers can
+import the public event and state contracts from `@reclaimprotocol/design`.
+
+## Tabs
+
+Use Oat's custom element with Reclaim classes instead of a framework wrapper:
+
+```html
+<ot-tabs class="rc-tabs">
+  <div role="tablist" aria-label="Asset details">
+    <button role="tab" type="button" aria-selected="true">Preview</button>
+    <button role="tab" type="button">Metadata</button>
+  </div>
+  <div role="tabpanel">Preview content</div>
+  <div role="tabpanel">Metadata content</div>
+</ot-tabs>
+```
+
+Load `@reclaimprotocol/design/oat` once at the browser boundary. The element
+emits `ot-tab-change` with the active `index` and `tab` in `event.detail`.
+
+## Semantic state attributes
+
+- Use `data-variant` for a component's stable visual variant.
+- Use `data-state` for its current state.
+- Pair busy states with `aria-busy`.
+- Pair errors with `aria-invalid` and a visible message.
+- Prefer native `disabled`; use `aria-disabled` when native disabling is
+  unavailable.
+
 ## Theming
 
 Set `data-theme` on the nearest theme boundary:
@@ -46,13 +107,14 @@ Interactive components must retain native semantics:
 - Expansion triggers expose `aria-expanded` and `aria-controls`.
 - Validation errors use `aria-invalid` and `aria-describedby`.
 
-## Framework entry points
+## Compose framework applications
 
-Static HTML, HTMX, Kitajs, and server-rendered JSX can use CSS with no runtime.
-Import `@reclaimprotocol/design/behaviors` for progressive enhancement. React
-applications use `@reclaimprotocol/design/react`, with charts in
-`@reclaimprotocol/design/charts`. Vite and other modern bundlers consume all
-entries as ESM and can tree-shake unused named exports.
+Static HTML, HTMX, KitaJS, server-rendered JSX, and client frameworks use the
+same semantic markup. Import `@reclaimprotocol/design/behaviors` for progressive
+enhancement. Application components own state and render the documented native
+elements, `rc-` classes, attributes, and custom elements. Vite and other modern
+bundlers consume the JavaScript entries as ESM and can tree-shake unused named
+exports.
 
 Oat's custom-element runtime is optional and browser-only:
 
@@ -60,5 +122,18 @@ Oat's custom-element runtime is optional and browser-only:
 import '@reclaimprotocol/design/oat';
 ```
 
-Do not import that entry during server rendering. React components implement
-their own controlled state and do not require it.
+Do not import that entry during server rendering. Register Reclaim custom
+elements separately when the page uses a stateful composite:
+
+```js
+import {defineReclaimElements} from '@reclaimprotocol/design/elements';
+
+defineReclaimElements();
+```
+
+`rc-local-asset-field` accepts validation attributes and an optional async
+`prepare` property. It emits `reclaim:assetchange`, `reclaim:assetstatechange`,
+and `reclaim:assetclear`. `rc-image-editor` accepts its source through the
+`source` property, opens with `open()`, and emits `reclaim:imageapply` with a
+PNG data URL. The consuming application composes these elements and owns the
+final asset value.

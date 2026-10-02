@@ -1,3 +1,28 @@
+import {ReclaimImageEditor} from './image-editor.js';
+import {ReclaimLocalAssetField} from './local-asset-field.js';
+import type {EditedImageDetail} from './image-editor.js';
+import type {
+  LocalAssetChangeDetail,
+  LocalAssetStateDetail,
+} from './local-asset-field.js';
+
+export * from './image-editor.js';
+export * from './local-asset-field.js';
+
+declare global {
+  interface HTMLElementEventMap {
+    'reclaim:assetclear': CustomEvent<void>;
+    'reclaim:assetchange': CustomEvent<LocalAssetChangeDetail>;
+    'reclaim:assetstatechange': CustomEvent<LocalAssetStateDetail>;
+    'reclaim:imageapply': CustomEvent<EditedImageDetail>;
+  }
+
+  interface HTMLElementTagNameMap {
+    'rc-image-editor': ReclaimImageEditor;
+    'rc-local-asset-field': ReclaimLocalAssetField;
+  }
+}
+
 /**
  * Custom elements are intentionally limited to composites that need a small
  * state machine. Basic controls stay native HTML plus @reclaimprotocol/design/css.
@@ -123,5 +148,11 @@ export function defineReclaimElements(
 ): void {
   if (!registry.get('rc-combobox')) {
     registry.define('rc-combobox', ReclaimCombobox);
+  }
+  if (!registry.get('rc-local-asset-field')) {
+    registry.define('rc-local-asset-field', ReclaimLocalAssetField);
+  }
+  if (!registry.get('rc-image-editor')) {
+    registry.define('rc-image-editor', ReclaimImageEditor);
   }
 }

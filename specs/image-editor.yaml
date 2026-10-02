@@ -3,8 +3,8 @@ status: stable
 purpose:
   Select, crop, scale, frame, preview, and clear one image without sending it to
   a server.
-entry_point: '@reclaimprotocol/design/image-editor'
-styles: '@reclaimprotocol/design/image-editor.css'
+entry_point: '@reclaimprotocol/design/elements'
+styles: '@reclaimprotocol/design/css'
 variants: [cover, contain, transparent-background, solid-background]
 anatomy:
   [
@@ -18,16 +18,15 @@ anatomy:
   ]
 accessibility:
   web:
-    'Use the shared modal dialog, associate every control with a visible label,
+    'Use the native modal dialog, associate every control with a visible label,
     and announce load or export failures as alerts.'
-  keyboard: [Tab, Shift+Tab, Escape]
+  keyboard: [Tab, Shift+Tab, Escape, Arrow keys]
 behavior:
   privacy:
     'Selected files remain in the browser unless the consumer uploads them.'
   export:
-    'The apply action returns a PNG data URL at the configured output width.'
-  cleanup:
-    'Object URLs are revoked when files change, clear, or the field unmounts.'
+    'The apply action dispatches reclaim:imageapply with a PNG data URL at the
+    configured output width.'
   pointer:
     'Dragging the canvas repositions the image; sliders provide non-drag
     controls.'

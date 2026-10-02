@@ -8,14 +8,13 @@ tokens/**/*.tokens.json ── build-tokens.mjs ── CSS + TypeScript
 
 specs/*.yaml ─┬─ semantic HTML/CSS contracts
               ├─ framework-neutral ESM behaviors
-              ├─ optional custom elements
-              └─ React components and charts
+              └─ custom elements for stateful composites
 
 @reclaimprotocol/design
 ├── /css
 ├── /behaviors
-├── /react
-├── /charts
+├── /elements
+├── /icons
 └── /brand
 ```
 
@@ -29,19 +28,25 @@ specs/*.yaml ─┬─ semantic HTML/CSS contracts
 
 ## Package boundary
 
-CSS classes are the base API because they work in static HTML, HTMX, server JSX,
-React and Vite applications. Custom elements are reserved for complex
-self-contained controls. React composes semantic elements and uses the same CSS
-rather than forking the styling system.
+CSS classes and semantic markup are the base API because they work in static
+HTML, HTMX, server JSX, and client framework applications. Framework
+applications render this markup themselves rather than importing SDK framework
+components. Delegated behaviors enhance document-level patterns. Custom elements
+are reserved for complex, self-contained state machines such as local asset
+preparation and image editing.
 
 The package export map is the public boundary. Every export points to compiled
-output under `dist`; consumers never execute TypeScript source. Root and
-framework-neutral subpaths do not import React. `/react` and `/charts` are
-separately compiled entry points, with React declared as an optional peer
-dependency. CSS has explicit opt-in entry points and is marked as
-side-effectful; JavaScript modules otherwise remain tree-shakeable.
+output under `dist`; consumers never execute TypeScript source. Public entry
+points don't depend on an application framework. CSS has explicit opt-in entry
+points and is marked as side-effectful; JavaScript modules otherwise remain
+tree-shakeable.
 
 The lowest CSS layer is a pinned source fork of Oat under `src/oat`. `src/css`
 maps Oat variables to Reclaim tokens, then layers branded geometry, surfaces,
 interactions and components above it. Vendored provenance and license files live
 under `vendor/oat`.
+
+Use Oat elements such as `ot-tabs` when the pinned runtime already provides the
+required behavior. Add Reclaim classes and tokens instead of duplicating the
+state machine. Add an `rc-` custom element only when native HTML, Oat, and
+delegated behavior don't provide the required lifecycle or property API.

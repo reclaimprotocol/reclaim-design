@@ -1,0 +1,35 @@
+name: Local asset field
+status: stable
+purpose:
+  Select, validate, prepare, preview, and clear a local file without assuming an
+  upload service or application framework.
+entry_point: '@reclaimprotocol/design/elements'
+styles: '@reclaimprotocol/design/css'
+states: [idle, preparing, ready, warning, error]
+attributes:
+  - accept
+  - max-size
+  - min-image-width
+  - min-image-height
+  - max-image-width
+  - max-image-height
+properties:
+  prepare:
+    'An optional asynchronous function that receives the file and an abort
+    signal, then returns a source, description, or warning.'
+events:
+  reclaim:assetstatechange: 'Reports every visible state and status message.'
+  reclaim:assetchange: 'Reports a validated, prepared asset and its local URL.'
+  reclaim:assetclear: 'Reports that the consumer cleared the field.'
+accessibility:
+  input: 'Use a visible label with the native file input.'
+  status: 'Preparing and ready states use status semantics; errors use alert.'
+  color: 'Every state includes text and does not depend on color alone.'
+behavior:
+  privacy: 'The element does not upload or persist selected files.'
+  cleanup:
+    'The element revokes every object URL that it creates when the asset
+    changes, clears, or disconnects.'
+  cancellation:
+    'A new selection or clear action aborts in-progress preparation and ignores
+    stale results.'

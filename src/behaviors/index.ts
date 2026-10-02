@@ -1,14 +1,25 @@
 import {getCopyValue, nextTheme, normalizeTheme} from './core.js';
 
 export type ReclaimRoot = Document | HTMLElement;
-export type ReclaimController = {destroy(): void};
-export type ThemeControllerOptions = {
+export interface ReclaimController {
+  destroy(): void;
+}
+export interface ThemeController extends ReclaimController {
+  apply(theme: unknown, persist?: boolean): 'light' | 'dark';
+}
+export interface LoadingOperation {
+  complete(): void;
+}
+export interface LoadingController extends ReclaimController {
+  begin(target: string | HTMLElement): LoadingOperation;
+}
+export interface ThemeControllerOptions {
   storage?: Storage | null;
   storageKey?: string;
-};
-export type CopyControllerOptions = {
+}
+export interface CopyControllerOptions {
   clipboard?: Pick<Clipboard, 'writeText'>;
-};
+}
 
 const eventElement = (event: Event): HTMLElement | null =>
   event.target instanceof HTMLElement ? event.target : null;
@@ -35,9 +46,7 @@ export function createThemeController(
     storage = globalThis.localStorage,
     storageKey = 'reclaim-theme',
   }: ThemeControllerOptions = {},
-): ReclaimController & {
-  apply(theme: unknown, persist?: boolean): 'light' | 'dark';
-} {
+): ThemeController {
   const target =
     root.querySelector<HTMLElement>('[data-theme-root]') ||
     (root instanceof Document ? root.documentElement : root);
@@ -705,11 +714,7 @@ export const milliseconds = (value: string | number): number =>
     : 1);
 
 /** Delay skeletons by 300ms and keep a shown state visible for at least 500ms. */
-export function createLoadingController(
-  root: ReclaimRoot,
-): ReclaimController & {
-  begin(target: string | HTMLElement): {complete(): void};
-} {
+export function createLoadingController(root: ReclaimRoot): LoadingController {
   const documentRoot = root instanceof Document ? root : root.ownerDocument;
   type LoadingRecord = {
     shownAt: number;

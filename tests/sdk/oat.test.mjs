@@ -14,11 +14,21 @@ const license = await readFile(
   new URL('../../vendor/oat/LICENSE.oat', import.meta.url),
   'utf8',
 );
+const reclaimComponents = await readFile(
+  new URL('../../src/css/components.css', import.meta.url),
+  'utf8',
+);
 
 test('the Oat fork is pinned and retains its license', () => {
   assert.match(vendorRecord, /32955ad1b65be51f13bc6be802611de80db9e357/);
   assert.match(license, /MIT License/);
   assert.match(license, /Kailash Nadh/);
+});
+
+test('Reclaim themes Oat tabs without changing the vendored source', () => {
+  assert.match(reclaimComponents, /ot-tabs\.rc-tabs/);
+  assert.match(reclaimComponents, /\[role=['"]tab['"]\]\[aria-selected=/);
+  assert.match(reclaimComponents, /--rc-color-action-primary/);
 });
 
 test('the aggregate stylesheet includes the required base and component modules', () => {

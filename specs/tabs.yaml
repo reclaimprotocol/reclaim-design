@@ -1,0 +1,22 @@
+name: Tabs
+status: stable
+purpose: Switch among related panels without changing the page context.
+foundation: ot-tabs
+states: [default, hover, focused, selected]
+anatomy: [ot-tabs, tablist, tab, tabpanel]
+behavior:
+  enhancement:
+    'Load @reclaimprotocol/design/oat to connect tabs, panels, keyboard
+    navigation, and the ot-tab-change event.'
+  fallback:
+    'Keep every panel in document order so its content remains available when
+    JavaScript does not load.'
+accessibility:
+  label: 'Give the tablist an accessible label.'
+  keyboard: [ArrowLeft, ArrowRight]
+  selection:
+    'The active tab uses aria-selected=true and is the only tab in the tab
+    sequence.'
+events:
+  - name: ot-tab-change
+    detail: [index, tab]

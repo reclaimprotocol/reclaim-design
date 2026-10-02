@@ -1,10 +1,9 @@
 # Reclaim Design
 
 `@reclaimprotocol/design` is Reclaim Protocol's web design system for semantic
-HTML, HTMX, server-rendered templates, React, and modern JavaScript bundlers.
-The package includes TypeScript declarations, framework-neutral behaviors, React
-components, interactive charts, design tokens, CSS, icons, and optional custom
-elements.
+HTML, HTMX, server-rendered templates, and framework applications. The package
+extends a pinned Oat foundation with Reclaim tokens, CSS, framework-neutral
+behaviors, icons, assets, and custom elements for stateful composites.
 
 The source is TypeScript at the repository root. Published applications consume
 compiled ESM and declaration files from `dist`; they don't compile the SDK
@@ -55,13 +54,6 @@ Or declare the package name explicitly:
 
 The root `prepare` script compiles `dist` for Git installations. Pin a tag or
 commit for deterministic dependency resolution.
-
-React entry points use React as an optional peer dependency. Install React when
-you use `/react` or `/charts`:
-
-```sh
-npm install @reclaimprotocol/design react react-dom
-```
 
 ## Load the styles
 
@@ -116,90 +108,64 @@ reclaim.destroy();
 Delegated event handling continues to work when HTMX or another server-driven
 framework replaces fragments.
 
-## Use React components
+## Compose framework applications
 
-```tsx
-import {
-  Button,
-  Card,
-  Field,
-  ReclaimThemeProvider,
-} from '@reclaimprotocol/design/react';
-import '@reclaimprotocol/design/tokens.css';
-import '@reclaimprotocol/design/css';
+React, HTMX, KitaJS, and other consumers render the same documented HTML. The
+application owns state, routing, validation policy, and product-specific
+composition; the SDK owns tokens, styling, accessibility contracts, and shared
+DOM behavior.
 
-export function VerificationForm() {
-  return (
-    <ReclaimThemeProvider defaultTheme="system">
-      <Card>
-        <Field label="Callback URL" name="callback" type="url" />
-        <Button type="submit">Save callback</Button>
-      </Card>
-    </ReclaimThemeProvider>
-  );
-}
+For tabs, render Oat's semantic element and load its browser runtime:
+
+```html
+<ot-tabs class="rc-tabs">
+  <div role="tablist" aria-label="Account settings">
+    <button role="tab" type="button" aria-selected="true">Profile</button>
+    <button role="tab" type="button">Security</button>
+  </div>
+  <div role="tabpanel">Profile settings</div>
+  <div role="tabpanel">Security settings</div>
+</ot-tabs>
 ```
 
-React components use the same semantic classes and tokens as framework-neutral
-HTML. They don't require the Oat JavaScript runtime.
-
-Use `RangeField` and `ColorField` for labeled native controls with stable help
-or error space. Compose `PickerField` with `SelectionDialog` when an option
-needs a rich preview. Compose `UploadField` with `UploadResult` to show a local
-file, its metadata, and consumer-provided edit or clear actions.
-
-## Use interactive charts
-
-Charts are exposed separately so applications that don't use them don't bundle
-their code.
-
-```tsx
-import {AreaChart, type ChartDatum} from '@reclaimprotocol/design/charts';
-
-const activity: ChartDatum[] = [
-  {label: 'Mon', value: 18},
-  {label: 'Tue', value: 31},
-  {label: 'Wed', value: 25},
-];
-
-export function ActivityChart() {
-  return <AreaChart data={activity} label="Daily activity" />;
-}
+```ts
+import '@reclaimprotocol/design/oat';
 ```
 
-## Edit uploaded images
+## Prepare and edit local assets
 
-The optional image-editor entry point provides a local crop and framing dialog
-and a composed upload field. Import its styles explicitly alongside the shared
-design styles:
+Register Reclaim custom elements once at the browser boundary:
 
-```tsx
-import {
-  EditableImageField,
-  type EditedImage,
-} from '@reclaimprotocol/design/image-editor';
-import '@reclaimprotocol/design/image-editor.css';
+```ts
+import {defineReclaimElements} from '@reclaimprotocol/design/elements';
 
-export function LogoField() {
-  const updateLogo = (image: EditedImage | null) => {
-    // Keep the data URL in local state or upload it with the surrounding form.
-  };
-
-  return (
-    <EditableImageField
-      label="Logo"
-      hint="Choose a PNG, JPEG, or WebP image."
-      aspectRatio={1}
-      defaultFit="contain"
-      onChange={updateLogo}
-    />
-  );
-}
+defineReclaimElements();
 ```
 
-The editor performs its work in the browser and returns a PNG data URL. Use the
-`ImageEditorDialog` export directly when file selection and state belong to the
-consuming application.
+Compose a native file input with the local asset element:
+
+```html
+<rc-local-asset-field accept="image/png,image/jpeg" max-size="5000000">
+  <label class="rc-upload">
+    <strong>Logo</strong>
+    <span>Choose a PNG or JPEG image up to 5 MB.</span>
+    <input type="file" />
+  </label>
+</rc-local-asset-field>
+
+<rc-image-editor
+  id="logo-editor"
+  aspect-ratio="1"
+  output-width="1600"
+  fit="contain"
+></rc-image-editor>
+```
+
+Set `field.prepare` when a file needs asynchronous local processing. Listen for
+`reclaim:assetchange` to receive the prepared local URL, then set
+`editor.source` and call `editor.open()`. The editor emits `reclaim:imageapply`
+with the PNG data URL. See [`docs/local-assets.md`](docs/local-assets.md) for
+the complete event and property examples.
 
 ## Use tokens in TypeScript
 
@@ -229,8 +195,8 @@ import {icon} from '@reclaimprotocol/design/icons';
 const accessibleIcon = icon('shieldCheck', 'Verified');
 ```
 
-React applications can place the SVG in a trusted rendering boundary or wrap the
-icon entry with their own icon component.
+Applications can place the SVG in a trusted rendering boundary or wrap the icon
+entry with their own view helper.
 
 ## Use Reclaim identity assets
 
@@ -275,18 +241,16 @@ Set `data-theme` on the nearest theme boundary:
 </main>
 ```
 
-Use `ReclaimThemeProvider` in React or `createThemeController` from
-`@reclaimprotocol/design/behaviors` when the choice must follow the system theme
-or persist in local storage.
+Use `createThemeController` from `@reclaimprotocol/design/behaviors` when the
+choice must follow the system theme or persist in local storage.
 
 ## Preserve tree shaking
 
 Import the narrowest entry point that matches your runtime:
 
 ```ts
-import {Button} from '@reclaimprotocol/design/react';
-import {BarChart} from '@reclaimprotocol/design/charts';
 import {createDialogController} from '@reclaimprotocol/design/behaviors';
+import {defineReclaimElements} from '@reclaimprotocol/design/elements';
 ```
 
 Don't import files from `@reclaimprotocol/design/dist` directly. The package's
@@ -368,22 +332,18 @@ npm run verify:full
 
 ## Public entry points
 
-| Entry point                                | Purpose                       | Runtime            |
-| ------------------------------------------ | ----------------------------- | ------------------ |
-| `@reclaimprotocol/design`                  | Behaviors and icons barrel    | Browser or bundler |
-| `@reclaimprotocol/design/behaviors`        | Progressive DOM enhancement   | Browser            |
-| `@reclaimprotocol/design/behaviors/core`   | DOM-free behavior helpers     | Any ESM runtime    |
-| `@reclaimprotocol/design/react`            | React components              | React              |
-| `@reclaimprotocol/design/charts`           | Interactive React SVG charts  | React              |
-| `@reclaimprotocol/design/elements`         | Custom-element registration   | Browser only       |
-| `@reclaimprotocol/design/icons`            | SVG icon strings              | Any ESM runtime    |
-| `@reclaimprotocol/design/brand`            | Approved identity assets      | Browser or bundler |
-| `@reclaimprotocol/design/image-editor`     | Local image editing controls  | React              |
-| `@reclaimprotocol/design/image-editor.css` | Image editor styles           | CSS bundler        |
-| `@reclaimprotocol/design/tokens`           | Typed token values            | Any ESM runtime    |
-| `@reclaimprotocol/design/tokens.css`       | Token variables and themes    | CSS bundler        |
-| `@reclaimprotocol/design/css`              | Complete component stylesheet | CSS bundler        |
-| `@reclaimprotocol/design/oat`              | Optional Oat runtime          | Browser only       |
+| Entry point                              | Purpose                       | Runtime            |
+| ---------------------------------------- | ----------------------------- | ------------------ |
+| `@reclaimprotocol/design`                | Behaviors and icons barrel    | Browser or bundler |
+| `@reclaimprotocol/design/behaviors`      | Progressive DOM enhancement   | Browser            |
+| `@reclaimprotocol/design/behaviors/core` | DOM-free behavior helpers     | Any ESM runtime    |
+| `@reclaimprotocol/design/elements`       | Custom-element registration   | Browser only       |
+| `@reclaimprotocol/design/icons`          | SVG icon strings              | Any ESM runtime    |
+| `@reclaimprotocol/design/brand`          | Approved identity assets      | Browser or bundler |
+| `@reclaimprotocol/design/tokens`         | Typed token values            | Any ESM runtime    |
+| `@reclaimprotocol/design/tokens.css`     | Token variables and themes    | CSS bundler        |
+| `@reclaimprotocol/design/css`            | Complete component stylesheet | CSS bundler        |
+| `@reclaimprotocol/design/oat`            | Optional Oat runtime          | Browser only       |
 
 ## Licensing
 

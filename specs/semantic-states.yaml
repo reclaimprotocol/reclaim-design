@@ -1,0 +1,31 @@
+name: Semantic states
+status: stable
+purpose: Express state consistently in HTML, CSS, and assistive technology.
+attributes:
+  data-state:
+    [idle, active, selected, preparing, busy, success, warning, error, disabled]
+  data-variant:
+    [
+      primary,
+      secondary,
+      destructive,
+      inline,
+      neutral,
+      success,
+      warning,
+      danger,
+      info,
+    ]
+rules:
+  busy:
+    'Use aria-busy=true on the region or control and data-state=preparing or
+    data-state=busy for its visual treatment.'
+  invalid:
+    'Use aria-invalid=true on the form control and reference the visible error
+    with aria-describedby.'
+  disabled:
+    'Use the native disabled attribute when the element supports it. Use
+    aria-disabled=true only when native disabled is unavailable.'
+  feedback:
+    'Use visible text or an icon with a text alternative; color alone is not a
+    state label.'

@@ -1,4 +1,11 @@
-import {useEffect, useState, type CSSProperties, type ReactNode} from 'react';
+import {
+  createElement,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import {createRoot} from 'react-dom/client';
 import {
   AreaChart,
@@ -8,12 +15,18 @@ import {
   LineChart,
   ScatterChart,
   type ChartDatum,
-} from '@reclaimprotocol/design/charts';
+} from './charts';
 import {
   createCopyController,
   createGlowController,
   createGuillocheController,
 } from '@reclaimprotocol/design/behaviors';
+import {
+  defineReclaimElements,
+  type LocalAssetChangeDetail,
+  type ReclaimImageEditor,
+  type ReclaimLocalAssetField,
+} from '@reclaimprotocol/design/elements';
 import {
   Alert,
   AppBar,
@@ -51,7 +64,6 @@ import {
   StatusPill,
   Switch,
   SwitcherDropdown,
-  Tabs,
   TagInput,
   ToastRegion,
   Tooltip,
@@ -59,9 +71,10 @@ import {
   UploadResult,
   useReclaimTheme,
   type ToastMessage,
-} from '@reclaimprotocol/design/react';
+} from './design-components';
 import '@reclaimprotocol/design/tokens.css';
 import '@reclaimprotocol/design/css';
+import '@reclaimprotocol/design/oat';
 import './catalog.css';
 
 const rMark = new URL('../../../assets/brand/r-mark-tile.png', import.meta.url)
@@ -411,6 +424,125 @@ function Overview() {
   );
 }
 
+function OatTabsExample() {
+  return createElement(
+    'ot-tabs',
+    {className: 'rc-tabs'},
+    <div role="tablist" aria-label="Provider detail">
+      <button role="tab" type="button" aria-selected="true">
+        States
+      </button>
+      <button role="tab" type="button">
+        Usage
+      </button>
+      <button role="tab" type="button">
+        Tokens
+      </button>
+    </div>,
+    <div role="tabpanel">
+      <p>Default, hover, focus, pressed, busy, disabled, and error.</p>
+    </div>,
+    <div role="tabpanel">
+      <p>Use semantic HTML first; enhance only the state machine.</p>
+    </div>,
+    <div role="tabpanel">
+      <p>
+        Reclaim tokens override the vendored foundation through cascade layers.
+      </p>
+    </div>,
+  );
+}
+
+function AssetElementsExample() {
+  const assetRef = useRef<ReclaimLocalAssetField | null>(null);
+  const editorRef = useRef<ReclaimImageEditor | null>(null);
+  const [preview, setPreview] = useState('');
+
+  useEffect(() => {
+    const asset = assetRef.current;
+    if (!asset) {
+      return;
+    }
+    asset.prepare = async (_file, signal) => {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = window.setTimeout(resolve, 250);
+        signal.addEventListener('abort', () => {
+          window.clearTimeout(timeout);
+          reject(new DOMException('Preparation stopped.', 'AbortError'));
+        });
+      });
+      return {description: 'Validated locally and ready to edit'};
+    };
+    const change = (event: Event) => {
+      const detail = (event as CustomEvent<LocalAssetChangeDetail>).detail;
+      setPreview(detail.url);
+      if (editorRef.current) {
+        editorRef.current.source = detail.url;
+      }
+    };
+    asset.addEventListener('reclaim:assetchange', change);
+    return () => asset.removeEventListener('reclaim:assetchange', change);
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) {
+      return;
+    }
+    const apply = (event: Event) => {
+      setPreview((event as CustomEvent<{dataUrl: string}>).detail.dataUrl);
+    };
+    editor.addEventListener('reclaim:imageapply', apply);
+    return () => editor.removeEventListener('reclaim:imageapply', apply);
+  }, []);
+
+  return (
+    <div className="catalog-stack">
+      {createElement(
+        'rc-local-asset-field',
+        {
+          ref: assetRef,
+          accept: 'image/png,image/jpeg,image/webp',
+          'max-size': '5000000',
+        },
+        <label className="rc-upload">
+          <strong>Local campaign image</strong>
+          <span>PNG, JPG, or WebP up to 5 MB.</span>
+          <input type="file" />
+        </label>,
+        <div className="rc-upload-result" data-asset-result hidden />,
+      )}
+      <div className="catalog-row">
+        <Button
+          variant="secondary"
+          disabled={!preview}
+          onClick={() => void editorRef.current?.open()}
+        >
+          Edit selected image
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={!preview}
+          onClick={() => {
+            assetRef.current?.clear();
+            setPreview('');
+          }}
+        >
+          Clear
+        </Button>
+        {preview && (
+          <img className="catalog-asset-preview" src={preview} alt="" />
+        )}
+      </div>
+      {createElement('rc-image-editor', {
+        ref: editorRef,
+        'aspect-ratio': '1',
+        'output-width': '800',
+      })}
+    </div>
+  );
+}
+
 function Components() {
   const [segment, setSegment] = useState('week');
   const [checked, setChecked] = useState(true);
@@ -430,7 +562,6 @@ function Components() {
   const [componentNav, setComponentNav] = useState('dashboard');
   const [componentFilter, setComponentFilter] = useState('all');
   const [componentStep, setComponentStep] = useState(0);
-  const [foundationTab, setFoundationTab] = useState('states');
   const [foundationTags, setFoundationTags] = useState([
     'verification',
     'production',
@@ -523,6 +654,17 @@ function Components() {
       <Section eyebrow="03" title="Selection">
         <Card>
           <div className="catalog-stack">
+            <label className="rc-field">
+              <span className="rc-field__label">Export format</span>
+              <select className="rc-select" defaultValue="feed" name="format">
+                <option value="feed">Feed · 1:1</option>
+                <option value="portrait">Portrait · 4:5</option>
+                <option value="story">Story · 9:16</option>
+              </select>
+              <span className="rc-field__message">
+                Native select markup works in every framework.
+              </span>
+            </label>
             <SegmentedControl
               label="Reporting period"
               value={segment}
@@ -555,28 +697,32 @@ function Components() {
                 <small>Encrypt result payloads at rest.</small>
               </span>
             </label>
-            {['review', 'auto'].map(value => (
-              <label className="catalog-choice" key={value}>
-                <input
-                  type="radio"
-                  name="policy"
-                  checked={radio === value}
-                  onChange={() => setRadio(value)}
-                />
-                <span>
-                  <strong>
-                    {value === 'review'
-                      ? 'Review before publish'
-                      : 'Publish automatically'}
-                  </strong>
-                  <small>
-                    {value === 'review'
-                      ? 'A person approves every change.'
-                      : 'Healthy revisions publish immediately.'}
-                  </small>
-                </span>
-              </label>
-            ))}
+            <fieldset className="rc-radio-cards">
+              <legend>Publishing policy</legend>
+              {['review', 'auto'].map(value => (
+                <label className="rc-radio-card" key={value}>
+                  <input
+                    type="radio"
+                    name="policy"
+                    value={value}
+                    checked={radio === value}
+                    onChange={() => setRadio(value)}
+                  />
+                  <span className="rc-radio-card__content">
+                    <strong>
+                      {value === 'review'
+                        ? 'Review before publish'
+                        : 'Publish automatically'}
+                    </strong>
+                    <small>
+                      {value === 'review'
+                        ? 'A person approves every change.'
+                        : 'Healthy revisions publish immediately.'}
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
           </div>
         </Card>
       </Section>
@@ -620,41 +766,7 @@ function Components() {
               title="Tabs and structured input"
               meta="Keyboard and touch ready"
             />
-            <Tabs
-              label="Provider detail"
-              value={foundationTab}
-              onChange={setFoundationTab}
-              items={[
-                {
-                  value: 'states',
-                  label: 'States',
-                  panel: (
-                    <p>
-                      Default, hover, focus, pressed, busy, disabled, and error.
-                    </p>
-                  ),
-                },
-                {
-                  value: 'usage',
-                  label: 'Usage',
-                  panel: (
-                    <p>
-                      Use semantic HTML first; enhance only the state machine.
-                    </p>
-                  ),
-                },
-                {
-                  value: 'tokens',
-                  label: 'Tokens',
-                  panel: (
-                    <p>
-                      Reclaim tokens override the vendored foundation through
-                      cascade layers.
-                    </p>
-                  ),
-                },
-              ]}
-            />
+            <OatTabsExample />
             <TagInput
               label="Verification tags"
               value={foundationTags}
@@ -676,6 +788,7 @@ function Components() {
                 </>
               }
             />
+            <AssetElementsExample />
           </Card>
         </div>
         <Card>
@@ -1614,6 +1727,8 @@ function Catalog() {
     </div>
   );
 }
+
+defineReclaimElements();
 
 createRoot(document.getElementById('root')!).render(
   <ReclaimThemeProvider defaultTheme="light">

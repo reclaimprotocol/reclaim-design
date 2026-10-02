@@ -23,6 +23,9 @@ test('CSS preserves framework-agnostic, semantic primitive selectors', () => {
   for (const selector of [
     '.rc-button',
     '.rc-field',
+    '.rc-radio-cards',
+    '.rc-radio-card',
+    'ot-tabs.rc-tabs',
     '.rc-dialog',
     '.rc-combobox',
     '.rc-searchable-dropdown',
@@ -31,6 +34,25 @@ test('CSS preserves framework-agnostic, semantic primitive selectors', () => {
     '.rc-breadcrumbs',
   ]) {
     assert.match(components, new RegExp(selector.replaceAll('.', '\\.')));
+  }
+});
+
+test('semantic state attributes map to visible component states', () => {
+  for (const contract of [
+    `[data-variant='primary']`,
+    `[data-state='disabled']`,
+    `[data-state='preparing']`,
+    `[data-state='success']`,
+    `[data-state='warning']`,
+    `[data-state='error']`,
+    `[aria-busy='true']`,
+    `[aria-invalid='true']`,
+    `[aria-disabled='true']`,
+  ]) {
+    assert.ok(
+      components.includes(contract),
+      `Missing state contract ${contract}`,
+    );
   }
 });
 

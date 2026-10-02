@@ -878,6 +878,13 @@
     padding-block-end: 88px;
   }
 }
+.catalog-asset-preview {
+  block-size: 48px;
+  border: var(--rc-border-width-default) solid var(--rc-color-border-default);
+  inline-size: 48px;
+  object-fit: contain;
+}
+
 @media (max-width: 720px) {
   .catalog-grid--four,
   .catalog-grid--three,

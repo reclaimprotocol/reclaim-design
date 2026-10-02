@@ -14,6 +14,12 @@ components:
       Select one or many descriptive options with the entire row as target.
     variants: [single, multiple]
     semantics: 'Native radio/checkbox whenever possible.'
+  - name: RadioCards
+    purpose: Select one descriptive option from a small, visible set.
+    states: [default, hover, focused, selected, disabled, invalid]
+    semantics:
+      'Use one fieldset, one legend, and one named group of native radio inputs.
+      Keep the entire label as the target.'
   - name: PickerField
     purpose: Show the current rich selection and open a selection surface.
     states: [default, disabled]

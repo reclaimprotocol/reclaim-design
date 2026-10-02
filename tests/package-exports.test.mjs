@@ -8,14 +8,10 @@ test('one public package exposes isolated web entry points', () => {
   assert.equal(manifest.name, '@reclaimprotocol/design');
   for (const subpath of [
     '.',
-    './react',
-    './charts',
     './behaviors',
     './elements',
     './icons',
     './brand',
-    './image-editor',
-    './image-editor.css',
     './tokens',
     './tokens.css',
     './css',
@@ -48,11 +44,14 @@ test('the brand entry packages the approved identity artwork', async () => {
   assert.match(source, /mark-blue-transparent\.png/);
 });
 
-test('framework runtimes stay optional and CSS is explicitly side-effectful', () => {
-  assert.equal(manifest.peerDependenciesMeta.react.optional, true);
-  assert.equal(manifest.peerDependenciesMeta['react-dom'].optional, true);
+test('framework runtimes stay outside the SDK and CSS is side-effectful', () => {
+  assert.equal(manifest.peerDependencies, undefined);
+  assert.equal(manifest.peerDependenciesMeta, undefined);
   assert.ok(manifest.sideEffects.includes('./dist/**/*.css'));
-  assert.doesNotMatch(manifest.exports['.'].import, /react|charts/);
+  assert.ok(manifest.sideEffects.includes('./dist/oat/js/**/*.js'));
+  assert.equal(manifest.exports['./react'], undefined);
+  assert.equal(manifest.exports['./charts'], undefined);
+  assert.equal(manifest.exports['./image-editor'], undefined);
 });
 
 test('the repository root is directly installable from Git', () => {

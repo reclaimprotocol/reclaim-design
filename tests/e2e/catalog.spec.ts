@@ -237,10 +237,10 @@ test('searchable dropdown filters metadata and selects a scope', async ({
   expect(listboxBounds!.y + listboxBounds!.height).toBeLessThanOrEqual(
     viewport.height,
   );
-  await expect(page.getByRole('option')).toHaveCount(4);
+  await expect(listbox.getByRole('option')).toHaveCount(4);
   await scope.fill('coursera.org');
-  await expect(page.getByRole('option')).toHaveCount(1);
-  await page.getByRole('option', {name: /coursera-certs/}).click();
+  await expect(listbox.getByRole('option')).toHaveCount(1);
+  await listbox.getByRole('option', {name: /coursera-certs/}).click();
   await expect(scope).toHaveAttribute('placeholder', 'coursera-certs');
 
   await scope.click();
@@ -248,6 +248,35 @@ test('searchable dropdown filters metadata and selects a scope', async ({
   await expect(page.getByText('No options match.')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('listbox', {name: 'Scope'})).toBeHidden();
+});
+
+test('semantic selections and Oat tabs work without React wrappers', async ({
+  page,
+}) => {
+  await openPage(page, 'Components');
+
+  const format = page.getByLabel('Export format');
+  await format.selectOption('story');
+  await expect(format).toHaveValue('story');
+
+  const automatic = page.getByRole('radio', {
+    name: /Publish automatically/,
+  });
+  await automatic.check();
+  await expect(automatic).toBeChecked();
+
+  const tabs = page.locator('ot-tabs.rc-tabs');
+  const usage = tabs.getByRole('tab', {name: 'Usage'});
+  await usage.click();
+  await expect(usage).toHaveAttribute('aria-selected', 'true');
+  await expect(
+    tabs.getByRole('tabpanel').filter({hasText: 'semantic HTML'}),
+  ).toBeVisible();
+  await usage.press('ArrowRight');
+  await expect(tabs.getByRole('tab', {name: 'Tokens'})).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
 });
 
 test('toast, generic switcher, navigation switcher, and guided flow expose working states', async ({
