@@ -276,6 +276,10 @@
 .catalog-searchable-dropdown-specimen {
   inline-size: min(360px, 100%);
 }
+.catalog-selection-dropdown,
+.catalog-selection-dropdown .rc-dropdown__trigger {
+  inline-size: min(360px, 100%);
+}
 .catalog-switcher-specimen .rc-switcher-dropdown,
 .catalog-switcher-specimen .rc-switcher-dropdown__trigger {
   inline-size: 100%;

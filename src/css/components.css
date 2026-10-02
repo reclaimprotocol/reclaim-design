@@ -1521,6 +1521,55 @@
     position: fixed;
     z-index: calc(var(--rc-z-index-fixed) + 20);
   }
+  ot-dropdown.rc-dropdown {
+    display: inline-block;
+    max-inline-size: 100%;
+  }
+  .rc-dropdown__trigger {
+    align-items: center;
+    background: var(--rc-color-surface-panel);
+    border: var(--rc-border-width-default) solid var(--rc-color-border-strong);
+    border-radius: var(--rc-radius-control);
+    color: var(--rc-color-text-primary);
+    display: flex;
+    font: var(--rc-font-weight-medium) var(--rc-font-size-control) / 1
+      var(--rc-font-family-mono);
+    gap: var(--rc-space-3);
+    justify-content: space-between;
+    min-block-size: var(--rc-size-field);
+    min-inline-size: 12rem;
+    padding: var(--rc-space-2) var(--rc-space-3);
+    text-align: start;
+  }
+  .rc-dropdown__chevron {
+    color: var(--rc-color-text-tertiary);
+    display: inline-block;
+    font-size: var(--rc-font-size-body);
+    transition: transform var(--rc-duration-fast) var(--rc-easing-standard);
+  }
+  .rc-dropdown__trigger[aria-expanded='true'] .rc-dropdown__chevron {
+    transform: rotate(180deg);
+  }
+  .rc-dropdown__menu {
+    box-sizing: border-box;
+    color: var(--rc-color-text-primary);
+    min-inline-size: 12rem;
+  }
+  .rc-dropdown__menu [role='menuitem'] {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--rc-color-text-primary);
+    display: flex;
+    font: var(--rc-font-weight-medium) var(--rc-font-size-control) / 1.3
+      var(--rc-font-family-mono);
+    gap: var(--rc-space-2);
+    inline-size: 100%;
+    justify-content: flex-start;
+    min-block-size: var(--rc-size-touch-target-min);
+    padding: var(--rc-space-2) var(--rc-space-3);
+    text-align: start;
+  }
   .rc-dropdown__item {
     align-items: center;
     background: transparent;
@@ -1534,7 +1583,10 @@
     text-align: start;
   }
   .rc-dropdown__item:hover,
-  .rc-dropdown__item[aria-current='true'] {
+  .rc-dropdown__item[aria-current='true'],
+  .rc-dropdown__menu [role='menuitem']:hover,
+  .rc-dropdown__menu [role='menuitem']:focus-visible,
+  .rc-dropdown__menu [role='menuitem'][aria-current='true'] {
     background: var(--rc-color-action-subtle);
   }
   .rc-switcher-dropdown {

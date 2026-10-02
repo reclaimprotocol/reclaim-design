@@ -256,6 +256,11 @@ test('styled selections and Oat tabs expose complete behavior', async ({
   await openPage(page, 'Components');
 
   const dropdown = page.getByRole('button', {name: 'Option one', exact: true});
+  await expect(dropdown).toHaveClass(/rc-dropdown__trigger/);
+  await expect(dropdown).toHaveCSS('border-top-style', 'solid');
+  expect(
+    await dropdown.evaluate(element => getComputedStyle(element).fontFamily),
+  ).toContain('IBM Plex Mono');
   await dropdown.click();
   const dropdownMenu = page.getByRole('menu').filter({
     has: page.getByRole('menuitem', {name: 'Option three'}),

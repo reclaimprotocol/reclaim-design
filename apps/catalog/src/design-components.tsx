@@ -1,5 +1,6 @@
 import {
   createContext,
+  createElement,
   forwardRef,
   useContext,
   useEffect,
@@ -1528,26 +1529,71 @@ export function Dropdown<Value extends string = string>({
   className,
   align = 'start',
 }: DropdownProps<Value>) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover
-      className={classes('rc-dropdown', className)}
-      open={open}
-      onOpenChange={setOpen}
-      align={align}
-      trigger={
-        <button
-          type="button"
-          className="rc-button rc-button--secondary"
-          aria-haspopup="menu"
-          aria-expanded={open}
-        >
-          {label}
-        </button>
+  const menuId = `rc-dropdown-${useId().replaceAll(':', '')}`;
+  const rootRef = useRef<HTMLElement | null>(null);
+  const menuRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    const menu = menuRef.current;
+    if (!root || !menu) {
+      return;
+    }
+    let dismissal: ReturnType<
+      typeof createDismissibleOverlayController
+    > | null = null;
+    const update = (event: Event) => {
+      const open = (event as Event & {newState?: string}).newState === 'open';
+      dismissal?.destroy();
+      dismissal = null;
+      if (open) {
+        menu.setAttribute('role', 'menu');
+        dismissal = createDismissibleOverlayController({
+          roots: [root, menu],
+          onDismiss: () => menu.hidePopover(),
+        });
+      } else {
+        menu.removeAttribute('role');
       }
-    >
-      <div role="menu">
-        {options.map(option => (
+    };
+    menu.addEventListener('toggle', update);
+    return () => {
+      dismissal?.destroy();
+      menu.removeEventListener('toggle', update);
+    };
+  }, []);
+  return createElement(
+    'ot-dropdown',
+    {
+      class: classes('rc-dropdown', className),
+      'data-align': align,
+      ref: (element: HTMLElement | null) => {
+        rootRef.current = element;
+      },
+    },
+    <>
+      <button
+        type="button"
+        className="rc-dropdown__trigger"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        popoverTarget={menuId}
+      >
+        <span>{label}</span>
+        <span className="rc-dropdown__chevron" aria-hidden="true">
+          ⌄
+        </span>
+      </button>
+      {createElement(
+        'menu',
+        {
+          className: 'rc-popover__content rc-dropdown__menu',
+          id: menuId,
+          popover: 'auto',
+          ref: (element: HTMLElement | null) => {
+            menuRef.current = element;
+          },
+        },
+        options.map(option => (
           <button
             key={option.value}
             type="button"
@@ -1555,17 +1601,19 @@ export function Dropdown<Value extends string = string>({
             className="rc-dropdown__item"
             aria-current={value === option.value || undefined}
             disabled={option.disabled}
-            onClick={() => {
+            onClick={event => {
               onChange(option.value);
-              setOpen(false);
+              event.currentTarget
+                .closest<HTMLElement>('[popover]')
+                ?.hidePopover();
             }}
           >
             {option.icon}
             {option.label}
           </button>
-        ))}
-      </div>
-    </Popover>
+        )),
+      )}
+    </>,
   );
 }
 
