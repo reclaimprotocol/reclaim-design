@@ -20,6 +20,11 @@ export interface ThemeControllerOptions {
 export interface CopyControllerOptions {
   clipboard?: Pick<Clipboard, 'writeText'>;
 }
+export type OverlayDismissReason = 'escape' | 'outside';
+export interface DismissibleOverlayControllerOptions {
+  roots: readonly HTMLElement[];
+  onDismiss: (reason: OverlayDismissReason) => void;
+}
 
 const eventElement = (event: Event): HTMLElement | null =>
   event.target instanceof HTMLElement ? event.target : null;
@@ -28,6 +33,47 @@ const selectorEscape = (value: string): string =>
   typeof globalThis.CSS?.escape === 'function'
     ? CSS.escape(value)
     : String(value).replace(/["\\]/g, '\\$&');
+
+/** Close a portalled overlay when a pointer lands outside it or Escape is pressed. */
+export function createDismissibleOverlayController({
+  roots,
+  onDismiss,
+}: DismissibleOverlayControllerOptions): ReclaimController {
+  const documentRoot = roots[0]?.ownerDocument;
+  if (!documentRoot) {
+    return {destroy() {}};
+  }
+  const onPointerDown = (event: PointerEvent) => {
+    const target = event.target;
+    if (target instanceof Node && roots.some(root => root.contains(target))) {
+      return;
+    }
+    onDismiss('outside');
+  };
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape') {
+      return;
+    }
+    event.preventDefault();
+    onDismiss('escape');
+  };
+  documentRoot.addEventListener(
+    'pointerdown',
+    onPointerDown as EventListener,
+    true,
+  );
+  documentRoot.addEventListener('keydown', onKeydown as EventListener);
+  return {
+    destroy() {
+      documentRoot.removeEventListener(
+        'pointerdown',
+        onPointerDown as EventListener,
+        true,
+      );
+      documentRoot.removeEventListener('keydown', onKeydown as EventListener);
+    },
+  };
+}
 
 function targetFrom(
   trigger: HTMLElement,

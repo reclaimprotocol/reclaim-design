@@ -27,13 +27,15 @@ test('behavior entry exposes controller interfaces instead of framework props', 
     'ReclaimController',
     'ThemeController',
     'LoadingController',
+    'DismissibleOverlayControllerOptions',
   ]) {
     assert.match(behaviorTypes, new RegExp(`interface ${name}`));
   }
 });
 
 test('the catalog demonstrates semantic selection and Oat tabs', () => {
-  assert.match(catalog, /className="rc-select"/);
+  assert.match(catalog, /className="catalog-selection-dropdown"/);
+  assert.match(catalog, /<Dropdown/);
   assert.match(catalog, /className="rc-radio-cards"/);
   assert.match(catalog, /createElement\(\s*['"]ot-tabs['"]/);
   assert.match(catalog, /@reclaimprotocol\/design\/oat/);

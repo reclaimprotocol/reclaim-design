@@ -14,10 +14,12 @@ import {
   type InputHTMLAttributes,
   type KeyboardEvent,
   type PropsWithChildren,
+  type Ref,
   type RefObject,
   type ReactNode,
 } from 'react';
 import {createPortal} from 'react-dom';
+import {createDismissibleOverlayController} from '@reclaimprotocol/design/behaviors';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'inline';
@@ -40,7 +42,7 @@ function AnchoredOverlay({
 }: PropsWithChildren<
   {
     anchor: RefObject<HTMLElement | null>;
-    overlayRef: RefObject<HTMLDivElement | null>;
+    overlayRef: Ref<HTMLDivElement>;
     align?: 'start' | 'end';
     matchAnchorWidth?: boolean;
     className?: string;
@@ -1463,36 +1465,27 @@ export function Popover({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const root = useRef<HTMLDivElement>(null);
-  const overlay = useRef<HTMLDivElement>(null);
+  const [overlay, setOverlay] = useState<HTMLDivElement | null>(null);
   const setOpen = (next: boolean) => {
     setUncontrolledOpen(next);
     onOpenChange?.(next);
   };
   useEffect(() => {
-    if (!open) {
+    const rootElement = root.current;
+    if (!open || !rootElement || !overlay) {
       return;
     }
-    const outside = (event: MouseEvent) => {
-      if (
-        root.current &&
-        !root.current.contains(event.target as Node) &&
-        !overlay.current?.contains(event.target as Node)
-      ) {
+    const controller = createDismissibleOverlayController({
+      roots: [rootElement, overlay],
+      onDismiss(reason) {
         setOpen(false);
-      }
-    };
-    const escape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', outside);
-    document.addEventListener('keydown', escape);
-    return () => {
-      document.removeEventListener('mousedown', outside);
-      document.removeEventListener('keydown', escape);
-    };
-  }, [open]);
+        if (reason === 'escape') {
+          rootElement.querySelector<HTMLElement>('[aria-haspopup]')?.focus();
+        }
+      },
+    });
+    return () => controller.destroy();
+  }, [open, overlay]);
   return (
     <div
       ref={root}
@@ -1506,7 +1499,7 @@ export function Popover({
       {open && (
         <AnchoredOverlay
           anchor={root}
-          overlayRef={overlay}
+          overlayRef={setOverlay}
           align={align}
           matchAnchorWidth={matchAnchorWidth}
           className={classes('rc-popover__content', className)}

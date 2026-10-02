@@ -250,14 +250,24 @@ test('searchable dropdown filters metadata and selects a scope', async ({
   await expect(page.getByRole('listbox', {name: 'Scope'})).toBeHidden();
 });
 
-test('semantic selections and Oat tabs work without React wrappers', async ({
+test('styled selections and Oat tabs expose complete behavior', async ({
   page,
 }) => {
   await openPage(page, 'Components');
 
-  const dropdown = page.getByRole('combobox', {name: /^Dropdown/});
-  await dropdown.selectOption('option-three');
-  await expect(dropdown).toHaveValue('option-three');
+  const dropdown = page.getByRole('button', {name: 'Option one', exact: true});
+  await dropdown.click();
+  const dropdownMenu = page.getByRole('menu').filter({
+    has: page.getByRole('menuitem', {name: 'Option three'}),
+  });
+  await expect(dropdownMenu).toBeVisible();
+  await page.getByRole('heading', {name: 'Selection', exact: true}).click();
+  await expect(dropdownMenu).toBeHidden();
+  await dropdown.click();
+  await dropdownMenu.getByRole('menuitem', {name: 'Option three'}).click();
+  await expect(
+    page.getByRole('button', {name: 'Option three', exact: true}),
+  ).toBeVisible();
 
   const automatic = page.getByRole('radio', {
     name: /Publish automatically/,

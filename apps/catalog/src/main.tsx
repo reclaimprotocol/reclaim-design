@@ -573,6 +573,7 @@ function Components() {
   const [flowError, setFlowError] = useState<ReactNode>(null);
   const [rangeValue, setRangeValue] = useState(68);
   const [colorValue, setColorValue] = useState('#0017ee');
+  const [dropdownValue, setDropdownValue] = useState('option-one');
   const [assetPickerOpen, setAssetPickerOpen] = useState(false);
   const [assetValue, setAssetValue] =
     useState<(typeof assetOptions)[number]['value']>('mark');
@@ -654,21 +655,29 @@ function Components() {
       <Section eyebrow="03" title="Selection">
         <Card>
           <div className="catalog-stack">
-            <label className="rc-field">
+            <div className="rc-field">
               <span className="rc-field__label">Dropdown</span>
-              <select
-                className="rc-select"
-                defaultValue="option-one"
-                name="selection"
-              >
-                <option value="option-one">Option one</option>
-                <option value="option-two">Option two</option>
-                <option value="option-three">Option three</option>
-              </select>
+              <Dropdown
+                className="catalog-selection-dropdown"
+                label={
+                  {
+                    'option-one': 'Option one',
+                    'option-two': 'Option two',
+                    'option-three': 'Option three',
+                  }[dropdownValue]
+                }
+                value={dropdownValue}
+                onChange={setDropdownValue}
+                options={[
+                  {value: 'option-one', label: 'Option one'},
+                  {value: 'option-two', label: 'Option two'},
+                  {value: 'option-three', label: 'Option three'},
+                ]}
+              />
               <span className="rc-field__message">
-                Native select markup works in every framework.
+                Use for a short, generic list of options.
               </span>
-            </label>
+            </div>
             <SegmentedControl
               label="Reporting period"
               value={segment}
