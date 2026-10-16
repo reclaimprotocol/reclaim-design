@@ -16,6 +16,9 @@ accessibility:
   keyboard: [Enter, Space]
   busy: 'Retain the accessible label, expose busy state, and retain width.'
 behavior:
+  iconOnly:
+    'Add data-icon-only for a square, bordered button with only an icon; it
+    needs an aria-label and keeps its border in every variant.'
   disabled:
     '45% opacity and no pointer interaction; do not use disabled to explain
     validation.'

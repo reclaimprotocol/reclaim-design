@@ -21,7 +21,11 @@ test('every library-owned CSS variable reference is generated', async () => {
     [...css.matchAll(/var\((--rc-[a-z0-9-]+)/g)].map(match => match[1]),
   );
   const consumerOverrides = new Set([
+    '--rc-anchor',
+    '--rc-chart-height',
     '--rc-flow-space',
+    '--rc-grid-min',
+    '--rc-metadata-key-width',
     '--rc-pointer-x',
     '--rc-pointer-y',
     '--rc-progress-value',

@@ -32,8 +32,40 @@ test('CSS preserves framework-agnostic, semantic primitive selectors', () => {
     'details.rc-expansion',
     '.rc-table',
     '.rc-breadcrumbs',
+    '.rc-page',
+    '.rc-pill',
+    '.rc-kind-tag',
+    '.rc-search',
+    '.rc-input-group',
+    '.rc-field-grid',
+    'table.rc-table',
+    '.rc-card__header',
+    '.rc-pool',
+    '.rc-plan',
+    '.rc-chart-frame',
+    '.rc-hint',
+    '.rc-event-timeline__row',
+    '.rc-wordmark',
+    '[popover]',
+    '[data-copy-done]',
+    '.rc-flow-shell',
+    '.rc-field__hint',
+    '.rc-selection-dialog',
+    '.rc-switcher-dropdown__action',
+    '.rc-link-card',
+    '.rc-selection-bar',
+    '.rc-notice',
+    '.rc-app-bar__nav',
+    '.rc-flow-shell__subject',
+    '.rc-chart-plot',
+    '.rc-bar-chart',
+    '.rc-area-chart',
+    '.rc-bar-list',
+    '.rc-chart-legend',
+    '.rc-table-scroll[data-bordered]',
+    '.rc-dialog > form',
   ]) {
-    assert.match(components, new RegExp(selector.replaceAll('.', '\\.')));
+    assert.match(components, new RegExp(selector.replace(/[.[\]]/g, '\\$&')));
   }
 });
 
@@ -72,4 +104,39 @@ test('CSS consumes semantic design tokens and provides a visible focus treatment
   assert.match(components, /--rc-color-border-spec/);
   assert.match(base, /:focus-visible/);
   assert.match(base, /--rc-color-focus-ring/);
+});
+
+test('component tokens drive button, field, and card sizing', () => {
+  for (const variable of [
+    '--rc-component-button-height',
+    '--rc-component-field-height',
+    '--rc-component-card-padding',
+  ]) {
+    assert.ok(components.includes(`var(${variable})`), variable);
+  }
+});
+
+test('the bottom tab bar has one hidden default and one compact block', () => {
+  assert.equal((components.match(/^\s*\.rc-bottom-tabs \{/gm) ?? []).length, 2);
+  assert.equal((components.match(/!important/g) ?? []).length, 1);
+});
+
+test('card headers, selects, segments, icon-only buttons, and chips follow the console contract', () => {
+  for (const contract of [
+    /\.rc-card\[data-tone='danger'\] :is\(h2, h3, \.rc-plan__name\)/,
+    /\.rc-card__header \{[^}]*min-block-size: calc\(\s*var\(--rc-space-175\) \* 2 \+ var\(--rc-size-header-row\)/,
+    /\.rc-chart-frame__header :is\(h2, h3\) \{[^}]*--rc-size-header-row/,
+    /\.rc-numbered-step h2 \{[^}]*--rc-size-header-row/,
+    /\.rc-input,\s*\.rc-select,\s*\.rc-textarea \{\s*background-color:/,
+    /\.rc-select \{\s*padding-inline-end: var\(--rc-size-select-arrow\)/,
+    /\.rc-segments:not\(\[data-width\]\) \{\s*justify-self: start/,
+    /\.rc-button\[data-icon-only\] \{[^}]*inline-size: var\(--rc-component-button-height\)/,
+    /\.rc-chip \{[^}]*min-block-size: var\(--rc-size-control-md\)/,
+    /\.rc-nav-link:has\(> small\) \{\s*min-block-size: var\(--rc-size-nav-item-count\)/,
+    /\.rc-switcher-dropdown__trigger \{[^}]*min-block-size: var\(--rc-size-switcher\)/,
+    /\.rc-switcher-dropdown__menu :is\(button, a\) \{[^}]*min-block-size: var\(--rc-size-menu-row\)/,
+    /\.rc-kpi-grid \{[^}]*margin-block-end: var\(--rc-space-3\)/,
+  ]) {
+    assert.match(components, contract);
+  }
 });

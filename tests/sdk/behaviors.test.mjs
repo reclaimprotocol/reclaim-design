@@ -7,7 +7,10 @@ import {
   nextTheme,
   normalizeTheme,
 } from '../../dist/behaviors/core.js';
-import {milliseconds} from '../../dist/behaviors/index.js';
+import {
+  createThemeController,
+  milliseconds,
+} from '../../dist/behaviors/index.js';
 
 test('theme helpers only accept supported themes', () => {
   assert.equal(normalizeTheme('dark'), 'dark');
@@ -33,4 +36,39 @@ test('copy and keyboard helpers keep behavior deterministic', () => {
 test('loading timing accepts the token duration syntax', () => {
   assert.equal(milliseconds('300ms'), 300);
   assert.equal(milliseconds('0.5s'), 500);
+});
+
+test('theme controller follows the system theme until a theme is saved', () => {
+  const target = {dataset: {}};
+  const root = {
+    querySelector: () => target,
+    querySelectorAll: () => [],
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  const listeners = [];
+  const query = {
+    matches: true,
+    addEventListener: (_, listener) => listeners.push(listener),
+    removeEventListener() {},
+  };
+  const original = globalThis.matchMedia;
+  globalThis.matchMedia = () => query;
+  try {
+    const saved = {getItem: () => 'light', setItem() {}};
+    createThemeController(root, {storage: saved, followSystem: true});
+    assert.equal(target.dataset.theme, 'light');
+
+    const controller = createThemeController(root, {
+      storage: {getItem: () => null, setItem() {}},
+      followSystem: true,
+    });
+    assert.equal(target.dataset.theme, 'dark');
+    query.matches = false;
+    listeners.forEach(listener => listener());
+    assert.equal(target.dataset.theme, 'light');
+    controller.destroy();
+  } finally {
+    globalThis.matchMedia = original;
+  }
 });

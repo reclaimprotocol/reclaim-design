@@ -23,9 +23,13 @@ import {
 } from '@reclaimprotocol/design/behaviors';
 import {
   defineReclaimElements,
+  periodBetween,
+  type PeriodOption,
   type LocalAssetChangeDetail,
   type ReclaimImageEditor,
   type ReclaimLocalAssetField,
+  type ReclaimPeriodPicker,
+  type PeriodChangeDetail,
 } from '@reclaimprotocol/design/elements';
 import {
   Alert,
@@ -43,9 +47,12 @@ import {
   Dropdown,
   ExpansionTile,
   Field,
+  FilterRow,
   FilterToolbar,
   FlowShell,
+  InputGroup,
   HoverNavigation,
+  Icon,
   Kpi,
   LinearProgress,
   MenuSheet,
@@ -53,7 +60,6 @@ import {
   Meter,
   NavigationPane,
   PageHeader,
-  PeriodPicker,
   PickerField,
   ProfileMenu,
   RangeField,
@@ -68,6 +74,7 @@ import {
   ToastRegion,
   Tooltip,
   UploadField,
+  Wordmark,
   UploadResult,
   useReclaimTheme,
   type ToastMessage,
@@ -76,6 +83,9 @@ import '@reclaimprotocol/design/tokens.css';
 import '@reclaimprotocol/design/css';
 import '@reclaimprotocol/design/oat';
 import './catalog.css';
+import {PanelTitle, Section, sectionId} from './catalog-section';
+import {ConsolePatterns} from './console-patterns';
+import {SitePatterns} from './site-patterns';
 
 const rMark = new URL('../../../assets/brand/r-mark-tile.png', import.meta.url)
   .href;
@@ -109,14 +119,27 @@ const catalogNavigation = [
   },
   {
     label: 'Patterns',
-    items: ['Data display', 'Loading and feedback', 'Expansion'],
+    items: [
+      'Data display',
+      'Loading and feedback',
+      'Expansion',
+      'Product shell',
+      'Page layout',
+      'Tables and cards',
+      'Usage and plans',
+      'Activity and people',
+      'Popovers and copy',
+      'Site pages',
+      'Website cards',
+      'Server rendered charts',
+      'Dialog forms and toasts',
+      'Icons',
+    ],
   },
   {label: 'Charts', items: ['Chart fixtures']},
 ] as const;
 const catalogSections = catalogNavigation.flatMap(group => group.items);
 type CatalogSection = (typeof catalogSections)[number];
-const sectionId = (title: string) =>
-  `section-${title.replaceAll(' ', '-').toLowerCase()}`;
 const volume: ChartDatum[] = [
   ['05 Sep', 42, 10],
   ['06 Sep', 63, 12],
@@ -200,41 +223,15 @@ const assetOptions = [
     preview: <strong aria-hidden="true">R</strong>,
   },
 ] as const;
-
-function Section({
-  eyebrow,
-  title,
-  children,
-}: {
-  eyebrow: string;
-  title: string;
-  children: ReactNode;
-}) {
-  const id = sectionId(title);
-  return (
-    <section
-      id={id}
-      className="catalog-section"
-      data-catalog-section={title}
-      aria-labelledby={`${id}-title`}
-    >
-      <div className="catalog-section-title">
-        <span className="rc-eyebrow">{eyebrow}</span>
-        <h2 id={`${id}-title`}>{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function PanelTitle({title, meta}: {title: string; meta?: string}) {
-  return (
-    <div className="catalog-panel-title">
-      <strong>{title}</strong>
-      {meta && <span>{meta}</span>}
-    </div>
-  );
-}
+const hourlyPeriodOptions: readonly PeriodOption[] = [
+  {label: 'Last 1 hour', hours: 1},
+  {label: 'Last 3 hours', hours: 3},
+  {
+    label: 'Last 12 hours',
+    getRange: now =>
+      periodBetween(new Date(now.getTime() - 12 * 3_600_000), now),
+  },
+];
 
 function Guilloche() {
   return (
@@ -261,7 +258,7 @@ function BrandHeader({
       <header className="catalog-topbar">
         <div className="catalog-brand">
           <img src={rMark} alt="Reclaim" />
-          <img className="catalog-wordmark" src={wordmark} alt="Reclaim" />
+          <Wordmark />
         </div>
         <div className="catalog-topbar__actions">
           <span className="catalog-env">SANDBOX</span>
@@ -364,11 +361,7 @@ function Overview() {
             </p>
             <div className="catalog-row">
               <img src={rMark} alt="" className="catalog-mark" />
-              <img
-                src={wordmark}
-                alt="Reclaim"
-                className="catalog-wordmark catalog-wordmark--surface"
-              />
+              <Wordmark />
             </div>
           </div>
         </div>
@@ -556,11 +549,48 @@ function Components() {
   const [provider, setProvider] = useState<string | null>('chase');
   const [scope, setScope] = useState('all');
   const [sort, setSort] = useState('recent');
-  const [period, setPeriod] = useState('7d');
+  const periodPickerRef = useRef<ReclaimPeriodPicker>(null);
+  const [periodRange, setPeriodRange] = useState<PeriodChangeDetail | null>(
+    null,
+  );
+  const [disableCustomPeriod, setDisableCustomPeriod] = useState(false);
+  const [hourlyPeriod, setHourlyPeriod] = useState(false);
+  const [periodFontSize, setPeriodFontSize] = useState(12);
+  const [periodPadding, setPeriodPadding] = useState(8);
+  const [periodBorderGap, setPeriodBorderGap] = useState(0);
+  useEffect(() => {
+    const picker = periodPickerRef.current;
+    if (!picker) {
+      return;
+    }
+    const update = (event: CustomEvent<PeriodChangeDetail>) =>
+      setPeriodRange(event.detail);
+    picker.addEventListener('reclaim:periodchange', update);
+    const initial = picker.range;
+    setPeriodRange({
+      ...initial,
+      label: 'Last 7 days',
+      days: 7,
+      hours: null,
+      custom: false,
+    });
+    return () => picker.removeEventListener('reclaim:periodchange', update);
+  }, []);
+  useEffect(() => {
+    const picker = periodPickerRef.current;
+    if (picker && hourlyPeriod) {
+      picker.options = hourlyPeriodOptions;
+    } else if (picker) {
+      picker.options = [
+        {label: 'Last 7 days', days: 7},
+        {label: 'Last 30 days', days: 30},
+        {label: 'Last 90 days', days: 90},
+      ];
+    }
+  }, [hourlyPeriod]);
   const [query, setQuery] = useState('');
   const [encryption, setEncryption] = useState(true);
   const [componentNav, setComponentNav] = useState('dashboard');
-  const [componentFilter, setComponentFilter] = useState('all');
   const [componentStep, setComponentStep] = useState(0);
   const [foundationTags, setFoundationTags] = useState([
     'verification',
@@ -748,7 +778,7 @@ function Components() {
             />
             <div className="catalog-row">
               <Avatar initials="SK" alt="Syed" />
-              <Avatar src={rMark} alt="Reclaim" size="large" />
+              <Avatar src={rMark} alt="Reclaim" size="lg" />
               <StatusPill tone="verified">Healthy</StatusPill>
             </div>
             <div className="catalog-stack catalog-row--spaced">
@@ -975,26 +1005,84 @@ function Components() {
             </Tooltip>
           </div>
           <div className="catalog-row catalog-row--spaced">
-            <PeriodPicker
-              value={period}
-              onChange={setPeriod}
-              ranges={[
-                {value: '24h', label: '24 hours'},
-                {value: '7d', label: '7 days'},
-                {value: '30d', label: '30 days'},
-                {value: 'custom', label: 'Custom'},
-              ]}
-              custom={
-                <div className="catalog-row">
-                  <Field
-                    label="From"
-                    variant="date"
-                    defaultValue="2026-09-01"
-                  />
-                  <Field label="To" variant="date" defaultValue="2026-09-28" />
-                </div>
-              }
-            />
+            <div className="catalog-stack">
+              {createElement('rc-period-picker', {
+                ref: periodPickerRef,
+                'aria-label': 'Reporting period',
+                'disable-custom': disableCustomPeriod || undefined,
+                'data-testid': 'catalog-period-picker',
+                style: {
+                  '--rc-component-period-option-font-size': `${periodFontSize}px`,
+                  '--rc-component-period-option-padding-block': `${periodPadding}px`,
+                  '--rc-component-period-option-padding-inline': `${Math.round(periodPadding * 1.5)}px`,
+                  '--rc-component-period-border-gap': `${periodBorderGap}px`,
+                } as CSSProperties,
+              })}
+              <span
+                data-testid="catalog-period-output"
+                className="rc-field__hint"
+              >
+                {periodRange?.label}: {periodRange?.from} →{' '}
+                {periodRange?.through}
+              </span>
+              <label className="catalog-row">
+                <input
+                  type="checkbox"
+                  checked={hourlyPeriod}
+                  onChange={event => setHourlyPeriod(event.target.checked)}
+                />
+                Show hourly options
+              </label>
+              <label className="catalog-period-setting">
+                Option font size (px)
+                <input
+                  className="rc-input"
+                  type="number"
+                  min="9"
+                  max="24"
+                  value={periodFontSize}
+                  onChange={event =>
+                    setPeriodFontSize(Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="catalog-period-setting">
+                Button padding (px)
+                <input
+                  className="rc-input"
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={periodPadding}
+                  onChange={event =>
+                    setPeriodPadding(Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="catalog-period-setting">
+                Border gap (px)
+                <input
+                  className="rc-input"
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={periodBorderGap}
+                  onChange={event =>
+                    setPeriodBorderGap(Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="catalog-row">
+                <input
+                  type="checkbox"
+                  checked={disableCustomPeriod}
+                  onChange={event =>
+                    setDisableCustomPeriod(event.target.checked)
+                  }
+                />
+                Disable custom range
+              </label>
+            </div>
             <ChoiceRow
               type="checkbox"
               checked={checked}
@@ -1075,7 +1163,7 @@ function Components() {
             brand={
               <>
                 <img src={rMark} alt="" />
-                <img src={wordmark} alt="Reclaim" />
+                <Wordmark />
               </>
             }
             switcher={
@@ -1104,10 +1192,15 @@ function Components() {
               {
                 label: 'Monitor',
                 items: [
-                  {value: 'dashboard', label: 'Dashboard'},
+                  {
+                    value: 'dashboard',
+                    label: 'Dashboard',
+                    icon: <Icon name="grid" />,
+                  },
                   {
                     value: 'verifications',
                     label: 'Verifications',
+                    icon: <Icon name="activity" />,
                     badge: '12k',
                   },
                 ],
@@ -1115,20 +1208,63 @@ function Components() {
               {
                 label: 'Build',
                 items: [
-                  {value: 'catalog', label: 'Catalog', badge: '1.2k'},
-                  {value: 'providers', label: 'Providers', badge: '8'},
+                  {
+                    value: 'catalog',
+                    label: 'Catalog',
+                    icon: <Icon name="cube" />,
+                    badge: '1.2k',
+                  },
+                  {
+                    value: 'providers',
+                    label: 'Providers',
+                    icon: <Icon name="apps" />,
+                    badge: '8',
+                  },
                 ],
               },
               {
                 label: 'Organization',
                 items: [
-                  {value: 'connect', label: 'Connect your app'},
-                  {value: 'members', label: 'Members', badge: '5'},
-                  {value: 'settings', label: 'Settings'},
+                  {
+                    value: 'connect',
+                    label: 'Connect your app',
+                    icon: <Icon name="link" />,
+                  },
+                  {
+                    value: 'members',
+                    label: 'Members',
+                    icon: <Icon name="users" />,
+                    badge: '5',
+                  },
+                  {
+                    value: 'settings',
+                    label: 'Settings',
+                    icon: <Icon name="sliders" />,
+                  },
                 ],
               },
             ]}
-            footer={<Button>Use an agent</Button>}
+            footer={
+              <>
+                <Button size="sm" variant="secondary">
+                  Dark mode
+                </Button>
+                <Button size="lg" fullWidth>
+                  <Icon name="terminal" />
+                  Use an agent
+                </Button>
+                <a
+                  className="rc-button"
+                  data-size="lg"
+                  data-width="full"
+                  href="https://build.reclaimprotocol.org/docs"
+                >
+                  <Icon name="book" />
+                  OpenAPI reference
+                  <Icon name="externalLink" className="rc-button__trailing" />
+                </a>
+              </>
+            }
           />
         </div>
       </Section>
@@ -1142,19 +1278,26 @@ function Components() {
             }
             actions={
               <>
-                <Button variant="secondary">Integrate</Button>
+                <Button variant="secondary">
+                  <Icon name="link" />
+                  Integrate
+                </Button>
                 <Button>New provider</Button>
                 <ProfileMenu
                   initials="SK"
                   name="Syed"
-                  detail="syed@example.com"
+                  detail="syed@example.com · owner"
                 >
-                  <button type="button">Account settings</button>
+                  <button type="button">
+                    <Icon name="pencil" />
+                    Update your name
+                  </button>
                   <button
                     type="button"
                     className="rc-profile-menu__action--danger"
                   >
-                    Sign out
+                    <Icon name="logout" />
+                    Log out
                   </button>
                 </ProfileMenu>
               </>
@@ -1163,41 +1306,40 @@ function Components() {
           <div className="catalog-header-specimen">
             <PageHeader
               eyebrow="Monitor"
-              title="Dashboard"
-              description="Verification volume, completion, and provider health."
-              meta={<StatusPill tone="verified">Live</StatusPill>}
-              actions={<Button variant="secondary">Export</Button>}
+              title="Overview"
+              description="Proof volume, provider health and recent verifications for this organization."
+              actions={
+                <Button variant="secondary" size="md">
+                  Export
+                  <Icon name="chevronDown" className="rc-button__trailing" />
+                </Button>
+              }
             />
-            <FilterToolbar
-              results="128,441 sessions"
-              actions={<Button variant="inline">Clear</Button>}
-            >
-              <Field
-                label="Search"
-                type="search"
-                placeholder="Session or provider"
-              />
-              <div className="rc-field catalog-provider-filter">
-                <span className="rc-field__label">Provider</span>
-                <Dropdown
-                  label={
-                    componentFilter === 'all' ? 'All providers' : 'Degraded'
-                  }
-                  value={componentFilter}
-                  onChange={setComponentFilter}
+            <FilterToolbar>
+              <FilterRow>
+                <span className="rc-label">Scope</span>
+                <InputGroup caption="provider">
+                  <input placeholder="any" aria-label="Provider" />
+                  <Icon name="chevronDown" />
+                </InputGroup>
+                <span className="rc-filter-toolbar__results">
+                  128,441 sessions
+                </span>
+                <Button variant="inline">Clear</Button>
+              </FilterRow>
+              <FilterRow>
+                <span className="rc-label">Period</span>
+                <SegmentedControl
+                  label="Period"
+                  value={segment}
+                  onChange={setSegment}
                   options={[
-                    {value: 'all', label: 'All providers'},
-                    {value: 'degraded', label: 'Degraded'},
+                    {value: 'week', label: 'Last 7 days'},
+                    {value: 'month', label: 'Last 30 days'},
+                    {value: 'quarter', label: 'Last 90 days'},
                   ]}
                 />
-                <span
-                  className="rc-field__message"
-                  data-empty="true"
-                  aria-hidden="true"
-                >
-                  {'\u00a0'}
-                </span>
-              </div>
+              </FilterRow>
             </FilterToolbar>
           </div>
         </div>
@@ -1746,6 +1888,8 @@ function Catalog() {
           <Overview />
           <Components />
           <Patterns />
+          <ConsolePatterns />
+          <SitePatterns />
           <Charts />
         </main>
       </div>

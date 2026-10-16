@@ -1,4 +1,8 @@
-import {getCopyValue, nextTheme, normalizeTheme} from './core.js';
+import {getCopyValue, milliseconds, nextTheme, normalizeTheme} from './core.js';
+
+export {milliseconds};
+export {clearToasts, showToast} from './toast.js';
+export type {ToastOptions, ToastPlacement, ToastTone} from './toast.js';
 
 export type ReclaimRoot = Document | HTMLElement;
 export interface ReclaimController {
@@ -16,6 +20,8 @@ export interface LoadingController extends ReclaimController {
 export interface ThemeControllerOptions {
   storage?: Storage | null;
   storageKey?: string;
+  /** Use the operating system theme until the person picks one. */
+  followSystem?: boolean;
 }
 export interface CopyControllerOptions {
   clipboard?: Pick<Clipboard, 'writeText'>;
@@ -26,8 +32,17 @@ export interface DismissibleOverlayControllerOptions {
   onDismiss: (reason: OverlayDismissReason) => void;
 }
 
-const eventElement = (event: Event): HTMLElement | null =>
-  event.target instanceof HTMLElement ? event.target : null;
+// A click on an icon lands on its SVG, so count it as a click on the
+// element that holds the icon.
+const eventElement = (event: Event): HTMLElement | null => {
+  const {target} = event;
+  if (target instanceof HTMLElement) {
+    return target;
+  }
+  return target instanceof SVGElement
+    ? (target.closest('svg')?.parentElement ?? null)
+    : null;
+};
 
 const selectorEscape = (value: string): string =>
   typeof globalThis.CSS?.escape === 'function'
@@ -91,6 +106,7 @@ export function createThemeController(
   {
     storage = globalThis.localStorage,
     storageKey = 'reclaim-theme',
+    followSystem = false,
   }: ThemeControllerOptions = {},
 ): ThemeController {
   const target =
@@ -113,8 +129,16 @@ export function createThemeController(
     return value;
   };
   const saved = storage?.getItem?.(storageKey);
+  const system =
+    followSystem && !saved
+      ? globalThis.matchMedia?.('(prefers-color-scheme: dark)')
+      : undefined;
+  const applySystem = () => apply(system?.matches ? 'dark' : 'light', false);
   if (saved) {
     apply(saved, false);
+  } else if (system) {
+    applySystem();
+    system.addEventListener('change', applySystem);
   }
   const onClick = (event: Event) => {
     const button = eventElement(event)?.closest<HTMLElement>(
@@ -123,10 +147,17 @@ export function createThemeController(
     if (!button) {
       return;
     }
+    system?.removeEventListener('change', applySystem);
     apply(nextTheme(target.dataset.theme));
   };
   root.addEventListener('click', onClick);
-  return {apply, destroy: () => root.removeEventListener('click', onClick)};
+  return {
+    apply,
+    destroy: () => {
+      root.removeEventListener('click', onClick);
+      system?.removeEventListener('change', applySystem);
+    },
+  };
 }
 
 export function createDialogController(root: ReclaimRoot): ReclaimController {
@@ -258,6 +289,17 @@ export function createCopyController(
   {clipboard = globalThis.navigator?.clipboard}: CopyControllerOptions = {},
 ): ReclaimController {
   const timers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+  let liveRegion: HTMLElement | null = null;
+  const announce = (message: string) => {
+    const doc = root instanceof Document ? root : root.ownerDocument;
+    if (!liveRegion?.isConnected) {
+      liveRegion = doc.createElement('div');
+      liveRegion.className = 'rc-visually-hidden';
+      liveRegion.setAttribute('role', 'status');
+      doc.body.append(liveRegion);
+    }
+    liveRegion.textContent = message;
+  };
   const onClick = async (event: Event) => {
     const button = eventElement(event)?.closest<HTMLElement>('[data-copy]');
     if (!button) {
@@ -276,6 +318,7 @@ export function createCopyController(
     try {
       await clipboard?.writeText?.(value);
       button.dataset.copyState = 'copied';
+      announce(button.dataset.copyDoneLabel ?? 'Copied');
       button.dispatchEvent(
         new CustomEvent('reclaim:copy', {bubbles: true, detail: {value}}),
       );
@@ -288,13 +331,19 @@ export function createCopyController(
       );
     } catch {
       button.dataset.copyState = 'failed';
+      announce(button.dataset.copyFailedLabel ?? 'Copy failed');
       button.dispatchEvent(
         new CustomEvent('reclaim:copyerror', {bubbles: true, detail: {value}}),
       );
     }
   };
   root.addEventListener('click', onClick);
-  return {destroy: () => root.removeEventListener('click', onClick)};
+  return {
+    destroy() {
+      root.removeEventListener('click', onClick);
+      liveRegion?.remove();
+    },
+  };
 }
 
 export function createSegmentController(root: ReclaimRoot): ReclaimController {
@@ -382,29 +431,33 @@ export function createSegmentController(root: ReclaimRoot): ReclaimController {
 }
 
 export function createComboboxController(root: ReclaimRoot): ReclaimController {
+  const INPUT = 'input[role=combobox], input[data-combobox-input]';
+  let optionIds = 0;
   const getBox = (node: HTMLElement) =>
     node.closest<HTMLElement>('[data-combobox]');
+  // A remote combobox gets its options from the server (for example with
+  // htmx), so it doesn't filter them here. A hidden `[data-combobox-value]`
+  // input holds the chosen value while the text input shows its label.
+  const isRemote = (box: HTMLElement) =>
+    box.hasAttribute('data-combobox-remote');
+  const valueInput = (box: HTMLElement) =>
+    box.querySelector<HTMLInputElement>('input[data-combobox-value]');
   const filter = (input: HTMLInputElement) => {
     const box = getBox(input);
     if (!box) {
       return;
     }
-    const query = input.value.trim().toLocaleLowerCase();
-    box.querySelectorAll<HTMLElement>('[role=option]').forEach(option => {
-      option.hidden = !option.textContent.toLocaleLowerCase().includes(query);
-    });
-    const list = box.querySelector<HTMLElement>('[role=listbox]');
-    if (list) {
-      list.hidden = false;
+    if (!isRemote(box)) {
+      const query = input.value.trim().toLocaleLowerCase();
+      box.querySelectorAll<HTMLElement>('[role=option]').forEach(option => {
+        option.hidden = !option.textContent.toLocaleLowerCase().includes(query);
+      });
     }
-    input.setAttribute('aria-expanded', 'true');
+    setOpen(box, true);
   };
   const choose = (option: HTMLElement) => {
     const box = getBox(option);
-    const input = box?.querySelector<HTMLInputElement>(
-      'input[role=combobox], input[data-combobox-input]',
-    );
-    const list = box?.querySelector<HTMLElement>('[role=listbox]');
+    const input = box?.querySelector<HTMLInputElement>(INPUT);
     if (!box || !input) {
       return;
     }
@@ -413,42 +466,112 @@ export function createComboboxController(root: ReclaimRoot): ReclaimController {
       .forEach(item =>
         item.setAttribute('aria-selected', String(item === option)),
       );
-    input.value = option.dataset.value ?? option.textContent?.trim() ?? '';
-    input.setAttribute('aria-expanded', 'false');
-    if (list) {
-      list.hidden = true;
+    const hidden = valueInput(box);
+    const label = option.dataset.label ?? option.textContent?.trim() ?? '';
+    if (hidden) {
+      hidden.value = option.dataset.value ?? '';
+      input.value = '';
+      input.placeholder = label;
+      // The choice usually reloads the page; a focused input would reopen.
+      input.blur();
+    } else {
+      input.value = option.dataset.value ?? label;
     }
-    input.dispatchEvent(new Event('change', {bubbles: true}));
+    setOpen(box, false);
+    (hidden ?? input).dispatchEvent(new Event('change', {bubbles: true}));
     box.dispatchEvent(
       new CustomEvent('reclaim:comboboxchange', {
         bubbles: true,
-        detail: {value: input.value},
+        detail: {value: hidden?.value ?? input.value},
       }),
     );
   };
   const onInput = (event: Event) => {
     const target = eventElement(event);
-    if (
-      target?.matches(
-        '[data-combobox] input[role=combobox], [data-combobox] input[data-combobox-input]',
-      )
-    ) {
+    if (target?.matches(`[data-combobox] :is(${INPUT})`)) {
       filter(target as HTMLInputElement);
     }
   };
+  const setOpen = (box: HTMLElement, open: boolean) => {
+    const list = box.querySelector<HTMLElement>('[role=listbox]');
+    if (list) {
+      list.hidden = !open;
+    }
+    const input = box.querySelector<HTMLInputElement>(INPUT);
+    input?.setAttribute('aria-expanded', String(open));
+    if (!open && valueInput(box) && input) {
+      // The chosen label stays in the placeholder; closing drops the search.
+      input.value = '';
+      setActive(box, null);
+    }
+  };
+  const setActive = (box: HTMLElement, option: HTMLElement | null) => {
+    box
+      .querySelectorAll<HTMLElement>('[role=option][data-active]')
+      .forEach(item => item.removeAttribute('data-active'));
+    const input = box.querySelector<HTMLInputElement>(INPUT);
+    if (!option) {
+      input?.removeAttribute('aria-activedescendant');
+      return;
+    }
+    option.dataset.active = 'true';
+    option.id ||= `${box.id || 'rc-combobox'}-option-${++optionIds}`;
+    input?.setAttribute('aria-activedescendant', option.id);
+    option.scrollIntoView({block: 'nearest'});
+  };
+  const onFocusin = (event: Event) => {
+    const target = eventElement(event);
+    const box = target && getBox(target);
+    if (box && target.matches(INPUT)) {
+      setOpen(box, true);
+    }
+  };
+  // The text input of a combobox with a value input is only for searching;
+  // its own change event must not submit the surrounding form.
+  const onChange = (event: Event) => {
+    const target = eventElement(event);
+    const box = target && getBox(target);
+    if (box && valueInput(box) && target.matches(INPUT)) {
+      event.stopPropagation();
+    }
+  };
   const onClick = (event: Event) => {
-    const option = eventElement(event)?.closest<HTMLElement>(
+    const target = eventElement(event);
+    const option = target?.closest<HTMLElement>(
       '[data-combobox] [role=option]',
     );
     if (option) {
+      // A link option navigates on its own.
+      if (option.matches('a[href]')) {
+        const box = getBox(option);
+        if (box) {
+          setOpen(box, false);
+        }
+        return;
+      }
       choose(option);
+      return;
     }
+    const trigger = target?.closest<HTMLElement>(
+      '[data-combobox] .rc-combobox__trigger',
+    );
+    const box = trigger && getBox(trigger);
+    if (box) {
+      const list = box.querySelector<HTMLElement>('[role=listbox]');
+      setOpen(box, Boolean(list?.hidden));
+      return;
+    }
+    (root instanceof Document ? root : root.ownerDocument)
+      .querySelectorAll<HTMLElement>('[data-combobox]')
+      .forEach(item => {
+        if (!target || !item.contains(target)) {
+          setOpen(item, false);
+        }
+      });
   };
   const onKeydown = (event: KeyboardEvent) => {
     const target = eventElement(event);
-    const input = target?.matches(
-      '[data-combobox] input[role=combobox], [data-combobox] input[data-combobox-input]',
-    )
+    const input = target?.matches(`[data-combobox] :is(${INPUT})`)
       ? (target as HTMLInputElement)
       : null;
     if (!input) {
@@ -461,16 +584,43 @@ export function createComboboxController(root: ReclaimRoot): ReclaimController {
     const visible = [
       ...box.querySelectorAll<HTMLElement>('[role=option]:not([hidden])'),
     ];
+    if (event.key === 'Escape') {
+      setOpen(box, false);
+      return;
+    }
+    if (valueInput(box)) {
+      // Arrows move the highlight; Enter chooses it.
+      const active = box.querySelector<HTMLElement>(
+        '[role=option][data-active]',
+      );
+      if (
+        (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
+        visible.length
+      ) {
+        event.preventDefault();
+        setOpen(box, true);
+        const index = active ? visible.indexOf(active) : -1;
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        setActive(
+          box,
+          visible[(index + step + visible.length) % visible.length] ?? null,
+        );
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (active) {
+          if (active.matches('a[href]')) {
+            active.click();
+          } else {
+            choose(active);
+          }
+        }
+      }
+      return;
+    }
     const selected = box.querySelector<HTMLElement>(
       '[role=option][aria-selected=true]',
     );
-    if (event.key === 'Escape') {
-      const list = box.querySelector<HTMLElement>('[role=listbox]');
-      if (list) {
-        list.hidden = true;
-      }
-      input.setAttribute('aria-expanded', 'false');
-    }
     if (event.key === 'ArrowDown' && visible.length) {
       event.preventDefault();
       choose(
@@ -488,11 +638,15 @@ export function createComboboxController(root: ReclaimRoot): ReclaimController {
     }
   };
   root.addEventListener('input', onInput);
+  root.addEventListener('focusin', onFocusin);
+  root.addEventListener('change', onChange, true);
   root.addEventListener('click', onClick);
   root.addEventListener('keydown', onKeydown as EventListener);
   return {
     destroy: () => {
       root.removeEventListener('input', onInput);
+      root.removeEventListener('focusin', onFocusin);
+      root.removeEventListener('change', onChange, true);
       root.removeEventListener('click', onClick);
       root.removeEventListener('keydown', onKeydown as EventListener);
     },
@@ -752,12 +906,6 @@ export function createGuillocheController(
     },
   };
 }
-
-export const milliseconds = (value: string | number): number =>
-  Number.parseFloat(String(value)) *
-  (String(value).trim().endsWith('s') && !String(value).trim().endsWith('ms')
-    ? 1000
-    : 1);
 
 /** Delay skeletons by 300ms and keep a shown state visible for at least 500ms. */
 export function createLoadingController(root: ReclaimRoot): LoadingController {

@@ -90,7 +90,7 @@ const cssDeclarations = tokens =>
     .join('\n');
 
 const renderCss = (core, themes) =>
-  `${generatedCssNotice}@font-face { font-family: "GnuMICR"; src: url("../assets/GnuMICR.otf") format("opentype"), url("../assets/GnuMICR.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }\n\n:root {\n${cssDeclarations(core)}\n}\n\n:root, [data-theme="light"] {\n${cssDeclarations(themes.light)}\n}\n\n[data-theme="dark"] {\n${cssDeclarations(themes.dark)}\n}\n`;
+  `${generatedCssNotice}@font-face { font-family: "GnuMICR"; src: url("../assets/GnuMICR.otf") format("opentype"), url("../assets/GnuMICR.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }\n\n:root {\n${cssDeclarations(core)}\n}\n\n:root, [data-theme="light"] {\n${cssDeclarations(themes.light)}\n}\n\n[data-theme="dark"], :root:has([data-theme-root][data-theme="dark"]) {\n${cssDeclarations(themes.dark)}\n}\n`;
 
 const renderTypeScript = (core, themes) => {
   const object = tokens =>
@@ -139,6 +139,7 @@ export async function writeTokenArtifacts(
   await Promise.all(
     [
       ['noise.svg', 'noise.svg'],
+      ['wordmark-reclaim-text.svg', 'wordmark.svg'],
       ['fonts/GnuMICR.otf', 'GnuMICR.otf'],
       ['fonts/GnuMICR.ttf', 'GnuMICR.ttf'],
     ].map(async ([source, target]) => {

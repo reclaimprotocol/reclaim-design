@@ -17,3 +17,34 @@ test('labeled icons expose an accessible image', () => {
 test('unknown icons fail loudly', () => {
   assert.throws(() => icon('missing'), /Unknown Reclaim icon/);
 });
+
+test('console icons use the shared stroke API', () => {
+  for (const name of [
+    'grid',
+    'activity',
+    'cube',
+    'apps',
+    'link',
+    'users',
+    'card',
+    'sliders',
+    'terminal',
+    'book',
+    'externalLink',
+    'upDown',
+    'chevronDown',
+    'chevronUp',
+    'plus',
+    'pencil',
+    'logout',
+    'globe',
+    'barChart',
+    'flag',
+    'inbox',
+    'more',
+    'sparkle',
+    'warning',
+  ]) {
+    assert.match(icon(name), /stroke-width="1.5"/, name);
+  }
+});

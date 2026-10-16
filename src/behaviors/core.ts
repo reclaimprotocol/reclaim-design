@@ -37,3 +37,9 @@ export function getCopyValue({
 export function isActivationKey(key: string): boolean {
   return key === 'Enter' || key === ' ';
 }
+
+export const milliseconds = (value: string | number): number =>
+  Number.parseFloat(String(value)) *
+  (String(value).trim().endsWith('s') && !String(value).trim().endsWith('ms')
+    ? 1000
+    : 1);
