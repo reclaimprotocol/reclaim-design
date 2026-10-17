@@ -460,11 +460,21 @@ test('the responsive shell never creates page-level horizontal overflow', async 
       window.scrollTo(0, document.documentElement.scrollHeight),
     );
     expect((await sidebar.boundingBox())!.y).toBe(top);
+    await expect(sidebar.getByTestId('catalog-source-link')).toHaveAttribute(
+      'href',
+      'https://github.com/reclaimprotocol/reclaim-design',
+    );
   } else {
     await expect(sidebar).toBeHidden();
     await expect(tabs).toBeVisible();
     await page.getByTestId('catalog-menu-trigger').click();
     await expect(page.locator('.rc-menu-sheet-layer')).toBeVisible();
+    await expect(
+      page.locator('.catalog-menu-sheet').getByTestId('catalog-source-link'),
+    ).toHaveAttribute(
+      'href',
+      'https://github.com/reclaimprotocol/reclaim-design',
+    );
     await page.keyboard.press('Escape');
     await expect(page.locator('.rc-menu-sheet-layer')).toHaveCount(0);
   }
