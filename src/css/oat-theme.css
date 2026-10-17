@@ -77,4 +77,7 @@
   [data-theme='dark'] {
     color-scheme: dark;
   }
+  :root:has([data-theme-root][data-theme='dark']) {
+    color-scheme: dark;
+  }
 }

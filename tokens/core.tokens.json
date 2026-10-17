@@ -4,7 +4,9 @@
     "blue": {
       "600": {"$type": "color", "$value": "#0000EE"},
       "500": {"$type": "color", "$value": "#6666FF"},
-      "300": {"$type": "color", "$value": "#B0B0FF"}
+      "300": {"$type": "color", "$value": "#B0B0FF"},
+      "800": {"$type": "color", "$value": "#0000B2"},
+      "200": {"$type": "color", "$value": "#CCCCFF"}
     },
     "neutral": {
       "000": {"$type": "color", "$value": "#FFFFFF"},
@@ -40,7 +42,12 @@
         "$type": "color",
         "$value": "rgba(204,204,255,0.24)"
       },
-      "navy-text": {"$type": "color", "$value": "rgba(204,204,255,0.55)"}
+      "navy-text": {"$type": "color", "$value": "rgba(204,204,255,0.57)"}
+    },
+    "pastel": {
+      "lime": {"$type": "color", "$value": "#F4FFE6"},
+      "peach": {"$type": "color", "$value": "#FFF0E5"},
+      "pink": {"$type": "color", "$value": "#FFEDF7"}
     }
   },
   "font": {
@@ -74,7 +81,16 @@
       "code": {"$type": "dimension", "$value": "11px"},
       "panel-title": {"$type": "dimension", "$value": "12.5px"},
       "section-title": {"$type": "dimension", "$value": "22px"},
-      "page-title": {"$type": "dimension", "$value": "28px"}
+      "page-title": {"$type": "dimension", "$value": "28px"},
+      "tiny": {"$type": "dimension", "$value": "9px"},
+      "micro": {"$type": "dimension", "$value": "9.5px"},
+      "note": {"$type": "dimension", "$value": "10.5px"},
+      "caption": {"$type": "dimension", "$value": "11px"},
+      "field": {"$type": "dimension", "$value": "12px"},
+      "subtitle": {"$type": "dimension", "$value": "14px"},
+      "figure": {"$type": "dimension", "$value": "18px"},
+      "price": {"$type": "dimension", "$value": "26px"},
+      "page-title-compact": {"$type": "dimension", "$value": "24px"}
     },
     "line-height": {
       "label": {"$type": "dimension", "$value": "14px"},
@@ -82,19 +98,29 @@
       "body": {"$type": "dimension", "$value": "19px"},
       "lede": {"$type": "dimension", "$value": "20px"},
       "small": {"$type": "dimension", "$value": "17px"},
-      "code": {"$type": "dimension", "$value": "19px"},
+      "code": {"$type": "dimension", "$value": "18px"},
       "section-title": {"$type": "dimension", "$value": "28px"},
-      "page-title": {"$type": "dimension", "$value": "32px"}
+      "page-title": {"$type": "dimension", "$value": "32px"},
+      "note": {"$type": "dimension", "$value": "18px"},
+      "figure": {"$type": "dimension", "$value": "34px"},
+      "page-title-compact": {"$type": "dimension", "$value": "30px"}
     },
     "letter-spacing": {
-      "label": {"$type": "number", "$value": "0.1em"}
+      "label": {"$type": "number", "$value": "0.1em"},
+      "eyebrow": {"$type": "number", "$value": "0.12em"},
+      "tag": {"$type": "number", "$value": "0.08em"}
     }
   },
   "space": {
+    "025": {"$type": "dimension", "$value": "2px"},
     "050": {"$type": "dimension", "$value": "4px"},
     "100": {"$type": "dimension", "$value": "8px"},
+    "125": {"$type": "dimension", "$value": "10px"},
     "150": {"$type": "dimension", "$value": "12px"},
+    "175": {"$type": "dimension", "$value": "14px"},
     "200": {"$type": "dimension", "$value": "16px"},
+    "225": {"$type": "dimension", "$value": "18px"},
+    "250": {"$type": "dimension", "$value": "20px"},
     "300": {"$type": "dimension", "$value": "24px"},
     "400": {"$type": "dimension", "$value": "32px"},
     "500": {"$type": "dimension", "$value": "48px"},
@@ -133,17 +159,53 @@
     "standard": {"$type": "cubicBezier", "$value": "{motion.ease-out}"}
   },
   "size": {
+    "control-sm": {"$type": "dimension", "$value": "28px"},
     "control": {"$type": "dimension", "$value": "30px"},
-    "field": {"$type": "dimension", "$value": "33px"},
+    "control-md": {"$type": "dimension", "$value": "32px"},
+    "control-lg": {"$type": "dimension", "$value": "34px"},
+    "control-xl": {"$type": "dimension", "$value": "40px"},
+    "field": {"$type": "dimension", "$value": "32px"},
+    "field-lg": {"$type": "dimension", "$value": "34px"},
     "textarea": {"$type": "dimension", "$value": "58px"},
-    "segment": {"$type": "dimension", "$value": "31px"},
-    "touch-target-min": {"$type": "dimension", "$value": "44px"}
+    "filter": {"$type": "dimension", "$value": "31px"},
+    "segment": {"$type": "dimension", "$value": "{size.filter}"},
+    "search": {"$type": "dimension", "$value": "38px"},
+    "search-lg": {"$type": "dimension", "$value": "40px"},
+    "nav-item": {"$type": "dimension", "$value": "34px"},
+    "nav-item-count": {"$type": "dimension", "$value": "36px"},
+    "header-row": {"$type": "dimension", "$value": "40px"},
+    "brand-row": {"$type": "dimension", "$value": "60px"},
+    "switcher": {"$type": "dimension", "$value": "42px"},
+    "menu-row": {"$type": "dimension", "$value": "36px"},
+    "select-arrow": {"$type": "dimension", "$value": "32px"},
+    "check": {"$type": "dimension", "$value": "16px"},
+    "radio": {"$type": "dimension", "$value": "14px"},
+    "mark": {"$type": "dimension", "$value": "22px"},
+    "mark-sm": {"$type": "dimension", "$value": "16px"},
+    "avatar": {"$type": "dimension", "$value": "24px"},
+    "avatar-lg": {"$type": "dimension", "$value": "56px"},
+    "swatch": {"$type": "dimension", "$value": "28px"},
+    "dot": {"$type": "dimension", "$value": "6px"},
+    "dot-sm": {"$type": "dimension", "$value": "5px"},
+    "dot-lg": {"$type": "dimension", "$value": "7px"},
+    "scrollbar": {"$type": "dimension", "$value": "10px"},
+    "scrollbar-border": {"$type": "dimension", "$value": "3px"},
+    "touch-target-min": {"$type": "dimension", "$value": "44px"},
+    "wordmark": {"$type": "dimension", "$value": "13px"}
   },
   "icon": {
-    "size-sm": {"$type": "dimension", "$value": "11px"}
+    "size-sm": {"$type": "dimension", "$value": "11px"},
+    "size-md": {"$type": "dimension", "$value": "13px"},
+    "size-lg": {"$type": "dimension", "$value": "15px"},
+    "size-tab": {"$type": "dimension", "$value": "19px"},
+    "chevron-right": {
+      "$type": "string",
+      "$value": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E\")"
+    }
   },
   "image": {
-    "noise": {"$type": "string", "$value": "url(../assets/noise.svg)"}
+    "noise": {"$type": "string", "$value": "url(../assets/noise.svg)"},
+    "wordmark": {"$type": "string", "$value": "url(../assets/wordmark.svg)"}
   },
   "noise": {
     "size": {"$type": "dimension", "$value": "200px"}
@@ -228,10 +290,19 @@
     "min-inline-size": {"$type": "dimension", "$value": "560px"}
   },
   "progress": {
-    "height": {"$type": "dimension", "$value": "3px"}
+    "height": {"$type": "dimension", "$value": "6px"},
+    "ring-size": {"$type": "dimension", "$value": "88px"},
+    "ring-stroke": {
+      "$type": "number",
+      "$value": 4,
+      "$description": "SVG user units in the 44-unit ring viewBox; renders as 8px at the default 88px size."
+    }
   },
   "dialog": {
-    "max-inline-size": {"$type": "dimension", "$value": "560px"}
+    "max-inline-size": {"$type": "dimension", "$value": "560px"},
+    "size-sm": {"$type": "dimension", "$value": "420px"},
+    "size-md": {"$type": "dimension", "$value": "520px"},
+    "size-wide": {"$type": "dimension", "$value": "760px"}
   },
   "combobox": {
     "menu-max-block-size": {"$type": "dimension", "$value": "280px"}
@@ -245,7 +316,9 @@
   },
   "opacity": {
     "disabled": {"$type": "number", "$value": 0.45},
-    "skeleton": {"$type": "number", "$value": 0.55}
+    "skeleton": {"$type": "number", "$value": 0.55},
+    "separator": {"$type": "number", "$value": 0.5},
+    "icon": {"$type": "number", "$value": 0.75}
   },
   "focus-ring": {
     "width": {"$type": "dimension", "$value": "2px"},
@@ -255,6 +328,49 @@
     "sidebar-width": {"$type": "dimension", "$value": "248px"},
     "topbar-height": {"$type": "dimension", "$value": "56px"},
     "mobile-tab-height": {"$type": "dimension", "$value": "56px"},
-    "card-min": {"$type": "dimension", "$value": "300px"}
+    "card-min": {"$type": "dimension", "$value": "300px"},
+    "page-padding-block-start": {"$type": "dimension", "$value": "28px"},
+    "page-padding-inline": {"$type": "dimension", "$value": "{space.400}"},
+    "page-padding-block-end": {"$type": "dimension", "$value": "{space.500}"},
+    "page-padding-block-start-compact": {
+      "$type": "dimension",
+      "$value": "{space.250}"
+    },
+    "page-padding-inline-compact": {
+      "$type": "dimension",
+      "$value": "{space.200}"
+    },
+    "page-width-xs": {"$type": "dimension", "$value": "860px"},
+    "page-width-sm": {"$type": "dimension", "$value": "900px"},
+    "page-width-md": {"$type": "dimension", "$value": "940px"},
+    "page-width-lg": {"$type": "dimension", "$value": "1000px"},
+    "page-width-xl": {"$type": "dimension", "$value": "1080px"},
+    "search-width": {"$type": "dimension", "$value": "560px"},
+    "search-width-lg": {"$type": "dimension", "$value": "760px"},
+    "aside-width": {"$type": "dimension", "$value": "300px"},
+    "notice-width": {"$type": "dimension", "$value": "480px"},
+    "kpi-min": {"$type": "dimension", "$value": "170px"},
+    "plan-min": {"$type": "dimension", "$value": "258px"},
+    "plan-min-block-size": {"$type": "dimension", "$value": "380px"},
+    "field-label-width": {"$type": "dimension", "$value": "150px"},
+    "metadata-key-width": {"$type": "dimension", "$value": "120px"},
+    "event-time-width": {"$type": "dimension", "$value": "58px"},
+    "menu-min-inline-size": {"$type": "dimension", "$value": "248px"},
+    "topbar-height-compact": {"$type": "dimension", "$value": "52px"},
+    "sheet-max-block-size": {"$type": "dimension", "$value": "560px"}
+  },
+  "chart": {
+    "bar-height": {"$type": "dimension", "$value": "150px"},
+    "area-height": {"$type": "dimension", "$value": "140px"},
+    "funnel-label-width": {"$type": "dimension", "$value": "128px"},
+    "frame-padding-block-end": {"$type": "dimension", "$value": "{space.175}"},
+    "bar-gap": {"$type": "dimension", "$value": "3px"},
+    "bar-min-size": {"$type": "dimension", "$value": "2px"},
+    "point-size": {"$type": "dimension", "$value": "16px"},
+    "legend-dot": {"$type": "dimension", "$value": "8px"},
+    "split-bar-height": {"$type": "dimension", "$value": "12px"},
+    "split-value-width": {"$type": "dimension", "$value": "80px"},
+    "label-width": {"$type": "dimension", "$value": "120px"},
+    "label-width-compact": {"$type": "dimension", "$value": "88px"}
   }
 }

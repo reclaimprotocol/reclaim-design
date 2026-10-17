@@ -11,8 +11,11 @@ assert.match(
   css,
   /\[data-theme="dark"\][\s\S]*--rc-color-surface-canvas: #040A20;/,
 );
-assert.match(css, /--rc-component-button-primary-background: #0000EE;/);
-assert.match(css, /--rc-component-button-primary-background: #6666FF;/);
+assert.match(css, /:root:has\(\[data-theme-root\]\[data-theme="dark"\]\) \{/);
+assert.match(
+  css,
+  /--rc-component-button-primary-background: linear-gradient\(#0000EE 0%, #6666F5 100%\);/,
+);
 assert.match(css, /--rc-guilloche-count: 26;/);
 assert.match(css, /--rc-color-surface-guilloche: rgba\(120,120,150,0.026\);/);
 assert.match(css, /@font-face/);

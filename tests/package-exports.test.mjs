@@ -59,3 +59,8 @@ test('the repository root is directly installable from Git', () => {
   assert.deepEqual(manifest.workspaces, ['apps/*']);
   assert.match(manifest.scripts.prepare, /build:sdk/);
 });
+
+test('the wordmark asset uses currentColor', async () => {
+  const svg = await readFile('dist/tokens/assets/wordmark.svg', 'utf8');
+  assert.match(svg, /fill="currentColor"/);
+});

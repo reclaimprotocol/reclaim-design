@@ -1,13 +1,16 @@
 import {ReclaimImageEditor} from './image-editor.js';
 import {ReclaimLocalAssetField} from './local-asset-field.js';
+import {ReclaimPeriodPicker} from './period-picker.js';
 import type {EditedImageDetail} from './image-editor.js';
 import type {
   LocalAssetChangeDetail,
   LocalAssetStateDetail,
 } from './local-asset-field.js';
+import type {PeriodChangeDetail} from './period-picker.js';
 
 export * from './image-editor.js';
 export * from './local-asset-field.js';
+export * from './period-picker.js';
 
 declare global {
   interface HTMLElementEventMap {
@@ -15,11 +18,13 @@ declare global {
     'reclaim:assetchange': CustomEvent<LocalAssetChangeDetail>;
     'reclaim:assetstatechange': CustomEvent<LocalAssetStateDetail>;
     'reclaim:imageapply': CustomEvent<EditedImageDetail>;
+    'reclaim:periodchange': CustomEvent<PeriodChangeDetail>;
   }
 
   interface HTMLElementTagNameMap {
     'rc-image-editor': ReclaimImageEditor;
     'rc-local-asset-field': ReclaimLocalAssetField;
+    'rc-period-picker': ReclaimPeriodPicker;
   }
 }
 
@@ -154,5 +159,8 @@ export function defineReclaimElements(
   }
   if (!registry.get('rc-image-editor')) {
     registry.define('rc-image-editor', ReclaimImageEditor);
+  }
+  if (!registry.get('rc-period-picker')) {
+    registry.define('rc-period-picker', ReclaimPeriodPicker);
   }
 }

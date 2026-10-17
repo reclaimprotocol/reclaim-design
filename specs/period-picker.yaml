@@ -1,0 +1,38 @@
+name: Period picker
+status: stable
+element: rc-period-picker
+purpose:
+  Select an inclusive range of instants using days, hours, or custom dates.
+defaults:
+  options:
+    - {label: 'Last 7 days', days: 7}
+    - {label: 'Last 30 days', days: 30}
+    - {label: 'Last 90 days', days: 90}
+  custom: enabled
+api:
+  options:
+    'Array of labeled presets with days, hours, or getRange(now) returning
+    {from, through} ISO dates or timestamps.'
+  disableCustom:
+    'Boolean property or disable-custom attribute; false by default.'
+  selectedIndex: 'Zero-based preset index, or null for custom.'
+  range: 'Inclusive {from, through} ISO 8601 timestamps.'
+  event:
+    name: 'reclaim:periodchange'
+    detail:
+      '{from, through, label, days, hours, custom}; unused duration is null.'
+  css:
+    - '--rc-component-period-option-font-size: font size of every option button.'
+    - '--rc-component-period-option-padding-block: vertical button padding.'
+    - '--rc-component-period-option-padding-inline: horizontal button padding.'
+    - '--rc-component-period-border-gap: space between the outer border and its
+      buttons.'
+behavior:
+  days: 'Include today and the preceding local calendar days.'
+  hours: 'End at the current instant and include the preceding hours.'
+  custom:
+    'Only commit and emit when both dates are valid and from <= through; end
+    dates include the full day.'
+accessibility:
+  semantics: 'Native buttons with aria-pressed and labeled native date inputs.'
+  target: 'Preset buttons have at least 44px touch targets.'

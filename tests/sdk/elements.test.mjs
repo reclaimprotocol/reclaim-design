@@ -14,7 +14,57 @@ test('the package registers only stateful custom-element composites', async () =
   assert.match(source, /define\(['"]rc-combobox['"]/);
   assert.match(source, /define\(['"]rc-local-asset-field['"]/);
   assert.match(source, /define\(['"]rc-image-editor['"]/);
+  assert.match(source, /define\(['"]rc-period-picker['"]/);
   assert.doesNotMatch(source, /define\(['"]rc-button['"]/);
+});
+
+test('period presets return inclusive timestamps for days and hours', () => {
+  const {periodForDays, periodForHours, periodBetween, DEFAULT_PERIOD_OPTIONS} =
+    elements;
+  assert.deepEqual(DEFAULT_PERIOD_OPTIONS, [
+    {label: 'Last 7 days', days: 7},
+    {label: 'Last 30 days', days: 30},
+    {label: 'Last 90 days', days: 90},
+  ]);
+  assert.deepEqual(periodForDays(7, new Date(2026, 0, 2)), {
+    from: new Date(2025, 11, 27).toISOString(),
+    through: new Date(new Date(2026, 0, 3).getTime() - 1).toISOString(),
+  });
+  const now = new Date('2026-10-15T12:00:00.000Z');
+  assert.deepEqual(periodForHours(3, now), {
+    from: '2026-10-15T09:00:00.000Z',
+    through: '2026-10-15T12:00:00.000Z',
+  });
+  assert.deepEqual(
+    periodBetween(new Date('2026-10-15T11:00:00.000Z'), now),
+    periodForHours(1, now),
+  );
+  assert.throws(() => periodForDays(0), RangeError);
+  assert.throws(() => periodForHours(0), RangeError);
+});
+
+test('period options accept hour durations and computed ranges', () => {
+  const picker = new elements.ReclaimPeriodPicker();
+  picker.options = [{label: 'Last 3 hours', hours: 3}];
+  assert.equal(picker.options[0].hours, 3);
+  assert.equal(
+    Date.parse(picker.range.through) - Date.parse(picker.range.from),
+    3 * 3_600_000,
+  );
+  picker.options = [
+    {
+      label: 'Previous hour',
+      getRange: now =>
+        elements.periodBetween(new Date(now.getTime() - 3_600_000), now),
+    },
+  ];
+  assert.equal(
+    Date.parse(picker.range.through) - Date.parse(picker.range.from),
+    3_600_000,
+  );
+  assert.throws(() => {
+    picker.options = [{label: 'Invalid', hours: 0}];
+  }, TypeError);
 });
 
 test('accept validation supports MIME families and extensions', () => {

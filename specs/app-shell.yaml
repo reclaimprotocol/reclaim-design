@@ -7,7 +7,9 @@ breakpoints:
   compact: {maxWidth: 900, navigation: bottom-tabs-and-menu-sheet}
   phone: {maxWidth: 560, grids: one-column}
 rules:
-  - 'Desktop sidebar is 248px.'
+  - 'At 900px and below a popover sidebar becomes the menu sheet.'
+  - 'Desktop sidebar is 248px. The brand row is 60px, the org switcher is 42px,
+    nav rows are 34px (36px with a count), and switcher menu rows are 36px.'
   - 'Mobile tab bar has Overview, Verifications, Catalog, Members, and Menu.'
   - 'The sidebar and menu sheet share one data source; do not duplicate
     navigation.'

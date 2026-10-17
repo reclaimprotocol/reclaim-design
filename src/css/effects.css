@@ -147,24 +147,54 @@
       box-shadow var(--rc-duration-hover) var(--rc-easing-standard),
       filter var(--rc-duration-hover) var(--rc-easing-standard);
   }
-  button:not([data-seg]):not([data-segment]),
-  .rc-button:not([data-seg]):not([data-segment]) {
+  /* Segments, text actions, navigation and menu rows take no lift or glow. */
+  :is(button, .rc-button):not(
+    [data-seg],
+    [data-segment],
+    :where(
+      [data-nav],
+      [data-tab],
+      .rc-nav-link,
+      .rc-button[data-variant='inline'],
+      .rc-dropdown__item,
+      .rc-dropdown__menu *,
+      .rc-switcher-dropdown__menu *,
+      .rc-switcher-dropdown__action,
+      .rc-profile-menu__actions *,
+      .rc-combobox__listbox *,
+      .rc-searchable-dropdown__listbox *
+    )
+  ) {
     overflow: hidden;
-  }
-  button:not([data-seg]):not([data-segment])::before,
-  .rc-button:not([data-seg]):not([data-segment])::before {
-    background: radial-gradient(
-      var(--rc-effect-button-glow-size) circle at var(--rc-pointer-x, 50%)
-        var(--rc-pointer-y, 50%),
-      var(--rc-effect-button-glow-color),
-      transparent var(--rc-effect-button-glow-fade)
-    );
-    content: '';
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    transition: opacity var(--rc-duration-fast) var(--rc-easing-standard);
+    &::before {
+      background: radial-gradient(
+        var(--rc-effect-button-glow-size) circle at var(--rc-pointer-x, 50%)
+          var(--rc-pointer-y, 50%),
+        var(--rc-effect-button-glow-color),
+        transparent var(--rc-effect-button-glow-fade)
+      );
+      content: '';
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      transition: opacity var(--rc-duration-fast) var(--rc-easing-standard);
+    }
+    &:hover {
+      box-shadow: var(--rc-effect-button-hover-shadow);
+      filter: saturate(var(--rc-effect-button-hover-saturation));
+      transform: translateY(-1px);
+    }
+    &:hover::before,
+    &[data-pointer-active='true']::before {
+      opacity: 1;
+    }
+    &:active {
+      box-shadow: none;
+      filter: none;
+      transform: scale(var(--rc-motion-press-scale));
+      transition-duration: var(--rc-duration-press);
+    }
   }
   [data-theme='light'] .rc-button--primary {
     --rc-effect-button-glow-color: rgba(255, 255, 255, 0.38);
@@ -176,25 +206,9 @@
       --rc-effect-button-danger-hover-shadow
     );
   }
-  button:not([data-seg]):not([data-segment]):hover,
-  .rc-button:not([data-seg]):not([data-segment]):hover {
-    box-shadow: var(--rc-effect-button-hover-shadow);
-    filter: saturate(var(--rc-effect-button-hover-saturation));
-    transform: translateY(-1px);
-  }
   .rc-button--destructive[data-pointer-active='true'],
   .rc-button[data-variant='destructive'][data-pointer-active='true'] {
     box-shadow: var(--rc-effect-button-danger-hover-shadow);
-  }
-  button:not([data-seg]):not([data-segment]):hover::before,
-  .rc-button:not([data-seg]):not([data-segment]):hover::before,
-  button:not([data-seg]):not(
-      [data-segment]
-    )[data-pointer-active='true']::before,
-  .rc-button:not([data-seg]):not(
-      [data-segment]
-    )[data-pointer-active='true']::before {
-    opacity: 1;
   }
   .rc-button[aria-busy='true']::before,
   .rc-button[aria-busy='true']:hover::before,
@@ -202,13 +216,6 @@
     content: none;
     display: none;
     opacity: 0;
-  }
-  button:not([data-seg]):not([data-segment]):active,
-  .rc-button:not([data-seg]):not([data-segment]):active {
-    box-shadow: none;
-    filter: none;
-    transform: scale(var(--rc-motion-press-scale));
-    transition-duration: var(--rc-duration-press);
   }
 
   [data-close] {
@@ -249,22 +256,8 @@
   }
   [data-nav][data-active='true'] {
     background: var(--rc-color-action-subtle);
-    box-shadow: inset var(--rc-nav-active-border) 0 0
-      var(--rc-color-action-primary);
     color: var(--rc-color-action-primary);
   }
-  [data-nav]::before,
-  [data-tab]::before {
-    display: none !important;
-  }
-  [data-nav]:hover,
-  [data-nav]:active,
-  [data-tab]:hover,
-  [data-tab]:active {
-    filter: none !important;
-    transform: none !important;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

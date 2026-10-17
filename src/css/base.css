@@ -41,6 +41,14 @@
   :where(a:hover) {
     color: var(--rc-color-action-primary-hover);
   }
+  ::-webkit-scrollbar {
+    block-size: var(--rc-size-scrollbar);
+    inline-size: var(--rc-size-scrollbar);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--rc-color-border-strong);
+    border: var(--rc-size-scrollbar-border) solid var(--rc-color-surface-canvas);
+  }
   :where(:focus-visible) {
     outline: var(--rc-focus-ring-width) solid var(--rc-color-focus-ring);
     outline-offset: var(--rc-focus-ring-offset);
@@ -84,13 +92,19 @@
   }
   .rc-eyebrow,
   .rc-label {
-    font-size: var(--rc-font-size-label);
-    font-weight: var(--rc-font-weight-bold);
-    letter-spacing: var(--rc-font-letter-spacing-label);
     text-transform: uppercase;
   }
   .rc-eyebrow {
-    color: var(--rc-color-text-secondary);
+    color: var(--rc-color-action-primary);
+    font-size: var(--rc-font-size-label);
+    font-weight: var(--rc-font-weight-bold);
+    letter-spacing: var(--rc-font-letter-spacing-eyebrow);
+  }
+  .rc-label {
+    color: var(--rc-color-text-tertiary);
+    font-size: var(--rc-font-size-micro);
+    font-weight: var(--rc-font-weight-regular);
+    letter-spacing: var(--rc-font-letter-spacing-label);
   }
   .rc-page-title {
     font-family: var(--rc-font-family-mono);
@@ -107,7 +121,7 @@
     margin: 0;
   }
   .rc-lede {
-    color: var(--rc-color-text-secondary);
+    color: var(--rc-color-text-tertiary);
     font-size: var(--rc-font-size-lede);
     line-height: var(--rc-font-line-height-lede);
     margin: 0;

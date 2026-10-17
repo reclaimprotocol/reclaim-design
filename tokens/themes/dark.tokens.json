@@ -8,8 +8,9 @@
       "wash": {"$type": "color", "$value": "rgba(4,10,32,0.78)"},
       "guilloche": {"$type": "color", "$value": "rgba(255,255,255,0.016)"},
       "glow": {"$type": "color", "$value": "rgba(102,102,255,0.12)"},
-      "scrim": {"$type": "color", "$value": "rgba(2,6,26,0.72)"},
-      "skeleton": {"$type": "color", "$value": "{color.navy.850}"}
+      "scrim": {"$type": "color", "$value": "rgba(4,10,32,0.45)"},
+      "skeleton": {"$type": "color", "$value": "{color.navy.850}"},
+      "scrim-subtle": {"$type": "color", "$value": "rgba(4,10,32,0.32)"}
     },
     "text": {
       "primary": {"$type": "color", "$value": "{color.neutral.000}"},
@@ -37,6 +38,24 @@
       "success-subtle": {"$type": "color", "$value": "rgba(155,227,138,0.14)"},
       "warning-subtle": {"$type": "color", "$value": "rgba(240,185,121,0.14)"},
       "danger-subtle": {"$type": "color", "$value": "rgba(255,158,196,0.14)"}
+    },
+    "pill": {
+      "verified": {
+        "background": {"$type": "color", "$value": "{color.pastel.lime}"},
+        "foreground": {"$type": "color", "$value": "{color.green.800}"}
+      },
+      "pending": {
+        "background": {"$type": "color", "$value": "{color.pastel.peach}"},
+        "foreground": {"$type": "color", "$value": "{color.amber.800}"}
+      },
+      "failed": {
+        "background": {"$type": "color", "$value": "{color.pastel.pink}"},
+        "foreground": {"$type": "color", "$value": "{color.magenta.800}"}
+      },
+      "sandbox": {
+        "background": {"$type": "color", "$value": "{color.blue.200}"},
+        "foreground": {"$type": "color", "$value": "{color.blue.800}"}
+      }
     }
   },
   "color-focus-ring": {"$type": "color", "$value": "{color.action.primary}"},

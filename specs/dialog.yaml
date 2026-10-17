@@ -13,6 +13,10 @@ accessibility:
 behavior:
   close:
     'Escape, close button, and outside press dismiss non-destructive dialogs.'
+  footer:
+    'Footer actions are right-aligned with 32px buttons. A form element can wrap
+    header, body, and footer, or the footer submit can use the form attribute to
+    submit a form in the body.'
   confirm:
     'Footer confirm action is right-aligned; destructive confirmations require
     an explicit label.'

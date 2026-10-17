@@ -21,14 +21,48 @@ import {
 } from 'react';
 import {createPortal} from 'react-dom';
 import {createDismissibleOverlayController} from '@reclaimprotocol/design/behaviors';
+import {icon, type ReclaimIconName} from '@reclaimprotocol/design/icons';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'inline';
-export type StatusTone = 'verified' | 'pending' | 'failed' | 'neutral';
+export type StatusTone =
+  'verified' | 'pending' | 'failed' | 'neutral' | 'optional';
+export type PillTone = Exclude<StatusTone, 'optional'> | 'sandbox';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 export type SemanticTone = 'neutral' | 'success' | 'warning' | 'danger';
 
 const classes = (...items: Array<string | undefined | false>) =>
   items.filter(Boolean).join(' ');
+
+/** Renders a package icon as JSX so it can be a direct child of a component. */
+export function Icon({
+  name,
+  className,
+}: {
+  name: ReclaimIconName;
+  className?: string;
+}) {
+  const markup = icon(name);
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      className={className}
+      dangerouslySetInnerHTML={{
+        __html: markup.slice(
+          markup.indexOf('>') + 1,
+          markup.lastIndexOf('</svg>'),
+        ),
+      }}
+    />
+  );
+}
 
 type AnchoredOverlaySide = 'above' | 'below';
 
@@ -170,7 +204,7 @@ export function ReclaimThemeProvider({
 
   return (
     <ThemeContext.Provider value={value}>
-      <div className="rc-theme" data-theme={resolvedTheme}>
+      <div className="rc-theme" data-theme={resolvedTheme} data-theme-root>
         {children}
       </div>
     </ThemeContext.Provider>
@@ -189,12 +223,16 @@ export const Button = forwardRef<
   HTMLButtonElement,
   ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: ButtonVariant;
+    size?: ButtonSize;
+    fullWidth?: boolean;
     busy?: boolean;
   }
 >(function Button(
   {
     className,
     variant = 'primary',
+    size,
+    fullWidth = false,
     busy = false,
     children,
     disabled,
@@ -209,6 +247,8 @@ export const Button = forwardRef<
       ref={ref}
       className={classes('rc-button', `rc-button--${variant}`, className)}
       data-variant={variant === 'destructive' ? 'danger' : variant}
+      data-size={size}
+      data-width={fullWidth ? 'full' : undefined}
       data-busy={busy || undefined}
       aria-busy={busy || undefined}
       disabled={disabled}
@@ -221,7 +261,7 @@ export const Button = forwardRef<
           : onClick
       }
     >
-      <span>{children}</span>
+      {children}
     </button>
   );
 });
@@ -252,7 +292,7 @@ export const Field = forwardRef<
   const messageId = `${inputId}-message`;
   const message = error ?? hint;
   return (
-    <label className={classes('rc-field', className)} data-field>
+    <label className={classes('rc-field', className)} data-field data-reserve>
       <span className="rc-field__label">{label}</span>
       {variant === 'textarea' ? (
         <textarea
@@ -425,28 +465,17 @@ export function ColorField({
 
 export function StatusPill({
   tone = 'neutral',
+  dot = false,
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement> & {tone?: StatusTone}) {
-  const modifier =
-    tone === 'verified'
-      ? 'success'
-      : tone === 'pending'
-        ? 'warning'
-        : tone === 'failed'
-          ? 'danger'
-          : 'info';
+}: HTMLAttributes<HTMLSpanElement> & {tone?: PillTone; dot?: boolean}) {
   return (
     <span
       {...props}
-      className={classes(
-        'badge',
-        'rc-badge',
-        `rc-badge--${modifier}`,
-        className,
-      )}
-      data-variant={modifier === 'info' ? 'secondary' : modifier}
+      className={classes('rc-pill', className)}
+      data-tone={tone === 'neutral' ? undefined : tone}
+      data-dot={dot || undefined}
     >
       {children}
     </span>
@@ -496,20 +525,26 @@ export function Avatar({
   src,
   alt = '',
   initials,
-  size = 'medium',
+  size,
+  shape,
+  tone,
   className,
   ...props
 }: HTMLAttributes<HTMLElement> & {
   src?: string;
   alt?: string;
   initials?: ReactNode;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'sm' | 'lg';
+  shape?: 'square';
+  tone?: 'outline' | 'pending';
 }) {
   return (
     <figure
       {...props}
-      className={classes('rc-avatar', size !== 'medium' && size, className)}
-      data-variant="avatar"
+      className={classes('rc-avatar', className)}
+      data-size={size}
+      data-shape={shape}
+      data-tone={tone}
     >
       {src ? (
         <img src={src} alt={alt} />
@@ -1109,6 +1144,23 @@ export function AppShell({
   );
 }
 
+export function AppShellMain({
+  bar,
+  children,
+  className,
+}: {
+  bar: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <main className={classes('rc-app-shell__main', className)}>
+      {bar}
+      <div className="rc-app-shell__content">{children}</div>
+    </main>
+  );
+}
+
 export function Sidebar({
   label = 'Primary navigation',
   className,
@@ -1147,6 +1199,8 @@ export type NavigationPaneProps<Value extends string = string> = {
   onNavigate?: (value: Value) => void;
   footer?: ReactNode;
   label?: string;
+  id?: string;
+  popover?: boolean;
   className?: string;
 };
 
@@ -1158,10 +1212,17 @@ export function NavigationPane<Value extends string = string>({
   onNavigate,
   footer,
   label = 'Primary navigation',
+  id,
+  popover,
   className,
 }: NavigationPaneProps<Value>) {
   return (
-    <Sidebar className={classes('rc-navigation-pane', className)} label={label}>
+    <Sidebar
+      className={classes('rc-navigation-pane', className)}
+      label={label}
+      id={id}
+      popover={popover ? 'auto' : undefined}
+    >
       {brand && <div className="rc-navigation-pane__brand">{brand}</div>}
       {switcher && (
         <div className="rc-navigation-pane__switcher">{switcher}</div>
@@ -1228,6 +1289,22 @@ export function AppBar({
   );
 }
 
+export function Page({
+  width,
+  children,
+  className,
+}: {
+  width?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={classes('rc-page', className)} data-width={width}>
+      {children}
+    </section>
+  );
+}
+
 export function PageHeader({
   eyebrow,
   title,
@@ -1247,15 +1324,17 @@ export function PageHeader({
     <header className={classes('rc-page-header', className)}>
       <div>
         {eyebrow && <span className="rc-eyebrow">{eyebrow}</span>}
-        <div className="rc-page-header__title">
-          <h1>{title}</h1>
-          {meta}
-        </div>
+        <h1>{title}</h1>
+        {meta && <div className="rc-page-header__meta">{meta}</div>}
         {description && <p>{description}</p>}
       </div>
       {actions && <div className="rc-page-header__actions">{actions}</div>}
     </header>
   );
+}
+
+export function KindTag({children}: {children: ReactNode}) {
+  return <span className="rc-kind-tag">{children}</span>;
 }
 
 export function FilterToolbar({
@@ -1276,11 +1355,19 @@ export function FilterToolbar({
       className={classes('rc-filter-toolbar', className)}
       aria-label={label}
     >
-      <div className="rc-filter-toolbar__controls">{children}</div>
-      {results && <span className="rc-filter-toolbar__results">{results}</span>}
-      {actions && <div className="rc-filter-toolbar__actions">{actions}</div>}
+      <div className="rc-filter-toolbar__controls">
+        {children}
+        {results && (
+          <span className="rc-filter-toolbar__results">{results}</span>
+        )}
+        {actions && <div className="rc-filter-toolbar__actions">{actions}</div>}
+      </div>
     </section>
   );
+}
+
+export function FilterRow({children}: {children: ReactNode}) {
+  return <div className="rc-filter-toolbar__controls">{children}</div>;
 }
 
 export function Switch({
@@ -1323,13 +1410,22 @@ export function Switch({
 
 export function MetadataList({
   items,
+  keyWidth,
   className,
 }: {
   items: ReadonlyArray<{label: ReactNode; value: ReactNode}>;
+  keyWidth?: string;
   className?: string;
 }) {
   return (
-    <dl className={classes('rc-metadata-list', className)}>
+    <dl
+      className={classes('rc-metadata-list', className)}
+      style={
+        keyWidth
+          ? ({'--rc-metadata-key-width': keyWidth} as CSSProperties)
+          : undefined
+      }
+    >
       {items.map((item, index) => (
         <div key={index}>
           <dt>{item.label}</dt>
@@ -1373,11 +1469,13 @@ export function BottomTabs({
   items,
   value,
   onChange,
+  menuTarget,
   className,
 }: {
   items: ReadonlyArray<NavItem>;
   value: string;
   onChange: (value: string) => void;
+  menuTarget?: string;
   className?: string;
 }) {
   return (
@@ -1398,6 +1496,16 @@ export function BottomTabs({
           <span>{item.label}</span>
         </button>
       ))}
+      {menuTarget && (
+        <button
+          type="button"
+          className="rc-nav-link"
+          popoverTarget={menuTarget}
+        >
+          <Icon name="menu" />
+          <span>Menu</span>
+        </button>
+      )}
     </nav>
   );
 }
@@ -2075,6 +2183,8 @@ export function SectionCard({
   count,
   context,
   action,
+  footer,
+  plainHeader = false,
   children,
   className,
 }: {
@@ -2082,20 +2192,24 @@ export function SectionCard({
   count?: ReactNode;
   context?: ReactNode;
   action?: ReactNode;
+  footer?: ReactNode;
+  plainHeader?: boolean;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <section className={classes('rc-section-card', 'rc-card', className)}>
-      <header className="rc-section-card__header">
-        <div>
-          <h2>{title}</h2>
-          {count && <span className="rc-section-card__count">{count}</span>}
-          {context && <p>{context}</p>}
-        </div>
-        {action}
+    <section className={classes('rc-card', className)}>
+      <header
+        className="rc-card__header"
+        data-variant={plainHeader ? 'plain' : undefined}
+      >
+        <h2>{title}</h2>
+        {count && <span className="rc-count">{count}</span>}
+        {context && <p>{context}</p>}
+        {action && <span className="rc-card__meta">{action}</span>}
       </header>
       {children}
+      {footer && <footer className="rc-card__footer">{footer}</footer>}
     </section>
   );
 }
@@ -2224,9 +2338,7 @@ export function ProfileMenu({
           <span>{initials}</span>
           <strong>{name}</strong>
           <span className="rc-profile-menu__chevron" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            <Icon name="chevronDown" />
           </span>
         </button>
       }
@@ -2249,6 +2361,7 @@ export function Dialog({
   footer,
   className,
   width,
+  size,
   minBodyHeight,
   bodyClassName,
 }: {
@@ -2260,6 +2373,7 @@ export function Dialog({
   footer?: ReactNode;
   className?: string;
   width?: CSSProperties['inlineSize'];
+  size?: 'sm' | 'md';
   minBodyHeight?: CSSProperties['minHeight'];
   bodyClassName?: string;
 }) {
@@ -2327,6 +2441,7 @@ export function Dialog({
     <dialog
       ref={ref}
       className={classes('rc-dialog', className)}
+      data-size={size}
       style={
         {
           '--_dialog-inline-size': width,
@@ -2422,6 +2537,8 @@ export function ChoiceRow({
   disabled,
   title,
   description,
+  code,
+  trailing,
   children,
   className,
 }: {
@@ -2433,6 +2550,8 @@ export function ChoiceRow({
   disabled?: boolean;
   title: ReactNode;
   description?: ReactNode;
+  code?: ReactNode;
+  trailing?: ReactNode;
   children?: ReactNode;
   className?: string;
 }) {
@@ -2451,26 +2570,37 @@ export function ChoiceRow({
         disabled={disabled}
         onChange={event => onChange(event.target.checked)}
       />
-      <span className="rc-choice-row__box" data-box aria-hidden="true" />
+      {code ? (
+        <span className="rc-choice-row__code">{code}</span>
+      ) : (
+        <span className="rc-choice-row__box" data-box aria-hidden="true" />
+      )}
       <span className="rc-choice-row__content">
         <strong>{title}</strong>
         {description && <small>{description}</small>}
       </span>
       {children}
+      {trailing && <span className="rc-choice-row__trailing">{trailing}</span>}
     </label>
   );
 }
 
 export function StatusIndicator({
   tone = 'neutral',
+  chip = false,
   children,
   className,
   ...props
-}: HTMLAttributes<HTMLSpanElement> & {tone?: StatusTone; children: ReactNode}) {
+}: HTMLAttributes<HTMLSpanElement> & {
+  tone?: StatusTone;
+  chip?: boolean;
+  children: ReactNode;
+}) {
   return (
     <span
       {...props}
       className={classes('rc-status', `rc-status--${tone}`, className)}
+      data-variant={chip ? 'chip' : undefined}
     >
       <i aria-hidden="true" />
       {children}
@@ -2492,16 +2622,14 @@ export function ListPanel({
   className?: string;
 }) {
   return (
-    <section className={classes('rc-list-panel', 'rc-panel', className)}>
-      <header className="rc-list-panel__header">
-        <div>
-          <h2>{title}</h2>
-          {count && <span>{count}</span>}
-        </div>
-        {action}
-      </header>
+    <SectionCard
+      title={title}
+      count={count}
+      action={action}
+      className={className}
+    >
       {children}
-    </section>
+    </SectionCard>
   );
 }
 
@@ -2624,6 +2752,7 @@ export function useCopy({clearAfter = 4000} = {}) {
 
 export function CodeBlock({
   code,
+  label,
   language,
   onCopy,
   copyLabel = 'Copy',
@@ -2632,6 +2761,7 @@ export function CodeBlock({
   className,
 }: {
   code: string;
+  label?: ReactNode;
   language?: string;
   onCopy?: () => void;
   copyLabel?: string;
@@ -2641,6 +2771,7 @@ export function CodeBlock({
 }) {
   return (
     <div className={classes('rc-code-block', className)}>
+      {label && <span className="rc-label">{label}</span>}
       <pre className="rc-code">
         <code data-language={language}>{code}</code>
       </pre>
@@ -2660,17 +2791,28 @@ export function CodeBlock({
 export function LinearProgress({
   value,
   label,
+  valueLabel,
+  note,
+  tone,
   className,
 }: {
   value: number;
   label?: ReactNode;
+  valueLabel?: ReactNode;
+  note?: ReactNode;
+  tone?: 'warning' | 'danger';
   className?: string;
 }) {
   const percent = Math.max(0, Math.min(100, value));
   const labelId = `rc-progress-${useId().replaceAll(':', '')}`;
   return (
     <div className={classes('rc-progress-wrap', className)}>
-      {label && <span id={labelId}>{label}</span>}
+      {label && (
+        <span id={labelId}>
+          <span>{label}</span>
+          {valueLabel && <span>{valueLabel}</span>}
+        </span>
+      )}
       <div
         className="rc-progress"
         role="progressbar"
@@ -2679,31 +2821,33 @@ export function LinearProgress({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
+        data-tone={tone}
         style={{'--rc-progress-value': `${percent}%`} as CSSProperties}
       >
         <span />
       </div>
+      {note && <small>{note}</small>}
     </div>
   );
 }
 
-export function Progress(props: {
-  value: number;
-  label?: ReactNode;
-  className?: string;
-}) {
+export function Progress(props: Parameters<typeof LinearProgress>[0]) {
   return <LinearProgress {...props} />;
 }
 
 export function CircularProgress({
   value,
   label,
-  size = 48,
+  sublabel,
+  size,
+  tone,
   className,
 }: {
   value: number;
   label?: ReactNode;
+  sublabel?: ReactNode;
   size?: number;
+  tone?: 'warning' | 'danger';
   className?: string;
 }) {
   const percent = Math.max(0, Math.min(100, value));
@@ -2715,10 +2859,11 @@ export function CircularProgress({
       aria-valuemax={100}
       aria-valuenow={percent}
       aria-label={typeof label === 'string' ? label : undefined}
+      data-tone={tone}
       style={
         {
           '--_progress-value-number': percent,
-          '--_circular-progress-size': `${size}px`,
+          '--_circular-progress-size': size ? `${size}px` : undefined,
         } as CSSProperties
       }
     >
@@ -2727,17 +2872,20 @@ export function CircularProgress({
           className="rc-circular-progress__track"
           cx="22"
           cy="22"
-          r="18"
+          r="19"
         />
         <circle
           className="rc-circular-progress__value"
           cx="22"
           cy="22"
-          r="18"
+          r="19"
           pathLength="100"
         />
       </svg>
-      <span>{label ?? `${percent}%`}</span>
+      <span>
+        {label ?? `${percent}%`}
+        {sublabel && <small>{sublabel}</small>}
+      </span>
     </div>
   );
 }
@@ -2767,6 +2915,7 @@ export function Skeleton({
 export function ExpansionTile({
   title,
   summary,
+  trail,
   children,
   open,
   onOpenChange,
@@ -2774,6 +2923,7 @@ export function ExpansionTile({
 }: {
   title: ReactNode;
   summary?: ReactNode;
+  trail?: ReactNode;
   children: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -2792,6 +2942,7 @@ export function ExpansionTile({
           <strong>{title}</strong>
           {summary && <small>{summary}</small>}
         </span>
+        {trail && <span className="rc-expansion__trail">{trail}</span>}
       </summary>
       <div className="rc-expansion__body">{children}</div>
     </details>
@@ -2799,20 +2950,17 @@ export function ExpansionTile({
 }
 
 export function EmptyState({
-  title,
-  description,
+  children,
   action,
   className,
 }: {
-  title: ReactNode;
-  description: ReactNode;
+  children: ReactNode;
   action?: ReactNode;
   className?: string;
 }) {
   return (
     <section className={classes('rc-empty-state', className)}>
-      <h2>{title}</h2>
-      <p>{description}</p>
+      <p>{children}</p>
       {action}
     </section>
   );
@@ -2831,9 +2979,32 @@ export function BlockingWarning({
 }) {
   return (
     <aside className={classes('rc-blocking-warning', className)} role="alert">
-      <strong>{title}</strong>
-      <span>{children}</span>
-      {action}
+      <Icon name="warning" className="rc-blocking-warning__icon" />
+      <div className="rc-blocking-warning__body">
+        <strong>{title}</strong>
+        <span>{children}</span>
+      </div>
+      {action && <div className="rc-blocking-warning__action">{action}</div>}
+    </aside>
+  );
+}
+
+export function Hint({
+  title,
+  children,
+  className,
+}: {
+  title: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <aside className={classes('rc-hint', className)}>
+      <Icon name="sparkle" />
+      <div>
+        <strong>{title}</strong>
+        {children && <p>{children}</p>}
+      </div>
     </aside>
   );
 }
@@ -2867,45 +3038,14 @@ export function InlineFeedback({
   );
 }
 
-export function PeriodPicker({
-  value,
-  onChange,
-  ranges,
-  custom,
-  className,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  ranges: ReadonlyArray<{value: string; label: ReactNode}>;
-  custom?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={classes('rc-period-picker', className)}>
-      <div className="rc-segments" role="group" aria-label="Period">
-        {ranges.map(range => (
-          <button
-            key={range.value}
-            type="button"
-            data-segment
-            aria-pressed={value === range.value}
-            onClick={() => onChange(range.value)}
-          >
-            {range.label}
-          </button>
-        ))}
-      </div>
-      {value === 'custom' && custom}
-    </div>
-  );
-}
-
 export type TimelineEvent = {
   id: string;
   at: ReactNode;
   title: ReactNode;
   description?: ReactNode;
-  tone?: 'success' | 'error' | 'neutral';
+  tone?: 'success' | 'error' | 'neutral' | 'muted';
+  phase?: ReactNode;
+  ordinal?: ReactNode;
   details?: ReactNode;
 };
 export function EventTimeline({
@@ -2922,24 +3062,38 @@ export function EventTimeline({
   return (
     <ol className={classes('rc-event-timeline', className)}>
       {events.map(event => {
-        const open = openId === event.id;
+        const row = (
+          <>
+            <time>{event.at}</time>
+            <span className="rc-event-timeline__body">
+              <span className="rc-event-timeline__head">
+                <strong>{event.title}</strong>
+                {event.phase && <span>{event.phase}</span>}
+                {event.ordinal && <span>{event.ordinal}</span>}
+              </span>
+              {event.description && <small>{event.description}</small>}
+            </span>
+          </>
+        );
         return (
           <li key={event.id} data-tone={event.tone ?? 'neutral'}>
-            <button
-              type="button"
-              aria-expanded={Boolean(event.details) ? open : undefined}
-              onClick={() =>
-                event.details && onOpenChange?.(open ? null : event.id)
-              }
-            >
-              <time>{event.at}</time>
-              <span>
-                <strong>{event.title}</strong>
-                {event.description && <small>{event.description}</small>}
-              </span>
-            </button>
-            {open && event.details && (
-              <div className="rc-event-timeline__details">{event.details}</div>
+            {event.details ? (
+              <details
+                open={openId === event.id}
+                onToggle={toggle => {
+                  const open = toggle.currentTarget.open;
+                  if (open !== (openId === event.id)) {
+                    onOpenChange?.(open ? event.id : null);
+                  }
+                }}
+              >
+                <summary className="rc-event-timeline__row">{row}</summary>
+                <pre className="rc-event-timeline__details" tabIndex={0}>
+                  {event.details}
+                </pre>
+              </details>
+            ) : (
+              <div className="rc-event-timeline__row">{row}</div>
             )}
           </li>
         );
@@ -3051,3 +3205,270 @@ export function FlowShell({
 
 /** @deprecated Use the domain-neutral FlowShell name. */
 export const ContributorFlowShell = FlowShell;
+
+export function Wordmark({className}: {className?: string}) {
+  return (
+    <span
+      className={classes('rc-wordmark', className)}
+      role="img"
+      aria-label="Reclaim"
+    />
+  );
+}
+
+export function SearchBar({
+  count,
+  size,
+  className,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
+  count?: ReactNode;
+  size?: 'lg';
+}) {
+  return (
+    <label className={classes('rc-search', className)} data-size={size}>
+      <Icon name="search" />
+      <input {...props} type={props.type ?? 'search'} />
+      {count && <span className="rc-search__count">{count}</span>}
+    </label>
+  );
+}
+
+export function InputGroup({
+  caption,
+  accent = false,
+  children,
+  className,
+}: {
+  caption?: ReactNode;
+  accent?: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={classes('rc-input-group', className)}
+      data-tone={accent ? 'accent' : undefined}
+    >
+      {caption && <span className="rc-input-group__caption">{caption}</span>}
+      {children}
+    </div>
+  );
+}
+
+export function FieldGrid({
+  rows,
+  className,
+}: {
+  rows: ReadonlyArray<{
+    id: string;
+    label: ReactNode;
+    control: ReactNode;
+    hint?: ReactNode;
+  }>;
+  className?: string;
+}) {
+  return (
+    <div className={classes('rc-field-grid', className)}>
+      {rows.flatMap(row => [
+        <label
+          key={`${row.id}-label`}
+          className="rc-field__label"
+          htmlFor={row.id}
+        >
+          {row.label}
+        </label>,
+        <div key={row.id}>
+          {row.control}
+          {row.hint && <span className="rc-field__hint">{row.hint}</span>}
+        </div>,
+      ])}
+    </div>
+  );
+}
+
+export function DataTable<T>({
+  columns,
+  rows,
+  getRowKey,
+  activeKey,
+  caption,
+  className,
+}: {
+  columns: ReadonlyArray<DataGridColumn<T>>;
+  rows: ReadonlyArray<T>;
+  getRowKey: (row: T, index: number) => string;
+  activeKey?: string;
+  caption?: string;
+  className?: string;
+}) {
+  return (
+    <div className="rc-table-scroll">
+      <table className={classes('rc-table', className)}>
+        {caption && <caption className="rc-visually-hidden">{caption}</caption>}
+        <thead>
+          <tr>
+            {columns.map(column => (
+              <th key={column.key} scope="col" data-align={column.align}>
+                {column.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => {
+            const key = getRowKey(row, index);
+            return (
+              <tr key={key} aria-selected={key === activeKey || undefined}>
+                {columns.map(column => (
+                  <td key={column.key} data-align={column.align}>
+                    {column.render(row)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function PoolCard({
+  label,
+  overage,
+  used,
+  limit,
+  value,
+  tone,
+  note,
+}: {
+  label: ReactNode;
+  overage?: ReactNode;
+  used: ReactNode;
+  limit: ReactNode;
+  value: number;
+  tone?: 'warning' | 'danger';
+  note?: ReactNode;
+}) {
+  return (
+    <article className="rc-pool">
+      <header className="rc-pool__header">
+        <span>{label}</span>
+        {overage && <small>{overage}</small>}
+      </header>
+      <p className="rc-pool__figure">
+        {used} <small>of {limit}</small>
+      </p>
+      <LinearProgress value={value} tone={tone} />
+      {note && <p className="rc-pool__note">{note}</p>}
+    </article>
+  );
+}
+
+export function PlanCard({
+  badge,
+  name,
+  amount,
+  period,
+  tagline,
+  features,
+  current = false,
+  featured = false,
+  action,
+}: {
+  badge?: ReactNode;
+  name: ReactNode;
+  amount: ReactNode;
+  period?: ReactNode;
+  tagline?: ReactNode;
+  features: ReadonlyArray<ReactNode>;
+  current?: boolean;
+  featured?: boolean;
+  action: ReactNode;
+}) {
+  return (
+    <article
+      className="rc-plan"
+      data-tile
+      data-current={current || undefined}
+      data-featured={featured || undefined}
+    >
+      {badge && <span className="rc-plan__badge">{badge}</span>}
+      <div>
+        <h3 className="rc-plan__name">{name}</h3>
+        <p className="rc-plan__price">
+          <strong>{amount}</strong>
+          {period && <small>{period}</small>}
+        </p>
+        {tagline && <p className="rc-plan__tagline">{tagline}</p>}
+      </div>
+      <ul className="rc-plan__features">
+        {features.map((feature, index) => (
+          <li key={index}>
+            <Icon name="check" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+      <div className="rc-plan__cta">{action}</div>
+    </article>
+  );
+}
+
+export function ChartFrame({
+  title,
+  meta,
+  kind,
+  children,
+  className,
+}: {
+  title: ReactNode;
+  meta?: ReactNode;
+  kind?: 'area' | 'funnel';
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={classes('rc-chart-frame', className)} data-tile>
+      <header className="rc-chart-frame__header">
+        <h3>{title}</h3>
+        {meta && <span>{meta}</span>}
+      </header>
+      <div className="rc-chart-frame__body" data-kind={kind}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+export function PersonRow({
+  initials,
+  name,
+  detail,
+  tone,
+  href,
+}: {
+  initials: ReactNode;
+  name: ReactNode;
+  detail?: ReactNode;
+  tone?: 'outline' | 'pending';
+  href?: string;
+}) {
+  const content = (
+    <>
+      <Avatar initials={initials} tone={tone} />
+      <span>
+        {name}
+        {detail && <small>{detail}</small>}
+      </span>
+    </>
+  );
+  return href ? (
+    <a className="rc-person" href={href}>
+      {content}
+    </a>
+  ) : (
+    <div className="rc-person">{content}</div>
+  );
+}

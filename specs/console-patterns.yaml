@@ -1,0 +1,69 @@
+name: Console patterns
+status: stable
+purpose: Page, card, table, and status patterns for product consoles.
+components:
+  - name: Page
+    anatomy: [breadcrumbs, page-header, content]
+    rules:
+      - 'Width steps are xs 860, sm 900, md 940, lg 1000, and xl 1080px.'
+      - 'Padding is 28/32/48px and 20/16/48px at 900px and below.'
+  - name: Pill
+    states: [neutral, verified, pending, failed, sandbox]
+    rules: ['Tint fills the pill; a dot is optional and never the only signal.']
+  - name: Table
+    anatomy: [header, rows, active-row]
+    rules:
+      - 'The active row uses a subtle fill and a 2px inset bar.'
+      - 'Tables scroll inside their card.'
+  - name: Card
+    anatomy: [header, body, footer]
+    variants: [default, compact, glass, spec, danger, row, plain-header]
+  - name: Link card
+    anatomy: [head, sub, description, points, foot]
+    variants: [default, add]
+    states: [default, warning-foot, danger-foot]
+    rules: ['The whole card is one link; use data-glass for the lift.']
+  - name: Selection bar
+    anatomy: [message, links, action]
+    rules: ['The bar sticks to the top of its scroll container.']
+  - name: Status chip
+    states: [verified, pending, failed, neutral, optional]
+    rules: ['A bordered pill with a toned dot; the label stays neutral.']
+  - name: Plan
+    anatomy: [badge, name, price, tagline, features, call-to-action]
+    states: [default, current, featured]
+  - name: Site app bar
+    anatomy: [brand, nav, actions]
+    rules:
+      - 'Sticks to the top with data-sticky.'
+      - 'At 640px and below the wordmark hides and the nav scrolls.'
+  - name: Notice
+    anatomy: [eyebrow, title, text, actions]
+    rules: ['One centered card, 480px wide.']
+  - name: Flow header
+    anatomy: [mark, title, subject, action]
+    rules: ['The subject is one ellipsized line.']
+  - name: Chart plot
+    anatomy: [ticks, area, labels]
+    variants: [stacked-bar, area, split-bar]
+    rules:
+      - 'The app renders the markup; the package supplies CSS only.'
+      - 'Series tones are accent, danger, success, warning, and muted.'
+      - 'Each datum has a focusable element with a text summary.'
+  - name: Toast
+    api: showToast
+    states: [info, success, warning, danger]
+    rules:
+      - 'Renders in a body-level popover region and follows the document theme.'
+      - 'Closes after 5 seconds by default; hover pauses the timer.'
+  - name: Combobox
+    anatomy: [control, trigger, listbox]
+    rules:
+      ['The listbox is anchored under the control and closes on outside press.']
+  - name: Timeline
+    anatomy: [time, dot, event, phase, ordinal, note, payload]
+    states: [neutral, muted, success, error]
+    behavior: 'Rows expand with native details.'
+accessibility:
+  tables: 'Use th scope and a visually hidden caption.'
+  status: 'Pills carry text.'
